@@ -1,2 +1,9 @@
 # ConsoleDungeon
- Play Dungeon on Console !
+
+`Play Dungeon on Console !`
+
+# 장비
+No. | 이름 | 타입 | 효과 | 설명 |
+-- | -- | -- | -- | -- |
+1 | 무쇠 갑옷 | 방어구 | 방어력 +1 | 무쇠로 만들어져 튼튼한 갑옷입니다.
+2 | 낡은 검 | 무기구 | 공격력 +2 | 쉽게 볼 수 있는 낡은 검입니다.
