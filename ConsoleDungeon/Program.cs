@@ -24,6 +24,7 @@ public class Player : ICharacter
     public int Gold { get; private set; }
     public List<Equip> Inventory { get; private set; }      // 가지고 있는 장비
 
+    private int exp = 0;        // 레벨 업을 위한 경험치
     public List<Equip> OnEquip { get; private set; }        // 장착되어 있는 장비
 
     public Player(string _name, string _job, int _ap, int _dp, int _hp, int _speed)
@@ -40,7 +41,6 @@ public class Player : ICharacter
         {
             new Equip("무쇠 갑옷", EquipType.Armor, "방어력 +1", "무쇠로 만들어져 튼튼한 갑옷입니다.", 0, 1),
             new Equip("낡은 검", EquipType.Weapon, "공격력 +2", "쉽게 볼 수 있는 낡은 검입니다.", 0, 2),
-            new Equip("빛나는 검", EquipType.Weapon, "공격력 +7", "반짝반짝.", 0, 3)
         };
         OnEquip = new List<Equip>() { null, null, null, null };
     }
@@ -61,6 +61,11 @@ public class Player : ICharacter
         if      (index == 1) { DP += 1 * pm; }
         else if (index == 2) { AP += 2 * pm; }
         else if (index == 3) { AP += 7 * pm; }
+    }
+
+    public void GetExperience(int val)
+    {
+        exp += val;
     }
 }
 
@@ -123,6 +128,27 @@ public class Equip
         }
 
         isEquipped = !isEquipped;
+    }
+}
+
+public class Shop
+{
+    public List<Equip> ShopList { get; set; }
+
+    public Shop()
+    {
+        ShopList = new List<Equip>()
+        {
+            new Equip("수련자의 도복", EquipType.Armor, "방어력 +5", "수련자가 입었던 도복입니다.", 1000, 4),
+            new Equip("모래 갑옷", EquipType.Armor, "체력 +10, 스피드 -5", "", 500, 5),
+
+            new Equip("단검", EquipType.Weapon, "공격력 +3", "", 400, 3),
+            new Equip("대검", EquipType.Weapon, "공격력 +10, 스피드-10", "엄청나게 크고 무겁습니다.", 1000, 3),
+            
+            new Equip("", EquipType.Accessory, "스피드 +10", "", 600, 6),
+
+            new Equip("부적", EquipType.Item, "체력 +10", "", 600, 6),
+        };
     }
 }
 
@@ -237,10 +263,16 @@ internal class Program
 {
     static void Main()
     {
+        Console.WriteLine(" _____  _____  _   _  _____  _____  _      _____  ______  _   _  _   _  _____  _____  _____  _   _ ");
+        Console.WriteLine("/  __ \\|  _  || \\ | |/  ___||  _  || |    |  ___| |  _  \\| | | || \\ | ||  __ \\|  ___||  _  || \\ | |");
+        Console.WriteLine("| /  \\/| | | ||  \\| |\\ `--. | | | || |    | |__   | | | || | | ||  \\| || |  \\/| |__  | | | ||  \\| |");
+        Console.WriteLine("| |    | | | || . ` | `--. \\| | | || |    |  __|  | | | || | | || . ` || | __ |  __| | | | || . ` |");
+        Console.WriteLine("| \\__/\\ \\_/ /| |\\  |/\\__/ /\\ \\_/ /| |____| |___  | |/ / | |_| || |\\  || |_\\ \\| |___ \\ \\_/ /| |\\  |");
+        Console.WriteLine(" \\____/ \\___/ \\_| \\_/\\____/  \\___/ \\_____/\\____/  |___/   \\___/ \\_| \\_/ \\____/\\____/  \\___/ \\_| \\_/");
         Console.WriteLine("당신의 이름을 알려주세요.");
         Console.Write(">> ");
 
-        Player player = new Player(Console.ReadLine(), "전사", 10, 5, 100, 10);
+        Player player = new Player(Console.ReadLine(), "전사", 10, 5, 100, 20);
 
         GameController GC = new GameController(player);
 
