@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 
-// 캐릭터 인터페이스 : 플레이어, 몬스터들의 기본 스탯
+// 캐릭터 인터페이스 : 플레이어, 몬스터들의 기본 스탯 = 이름 / 레벨 / 공격력 / 방어력 / 체력 / 스피드
 public interface ICharacter
 {
     string Name { get; }
-    string Job { get; }
     int Level { get; }
     int AP { get; }
     int DP { get; }
@@ -23,9 +22,9 @@ public class Player : ICharacter
     public int HP { get; private set; }
     public int Speed { get; private set; }
     public int Gold { get; private set; }
-    public List<Equip> Inventory { get; private set; }
+    public List<Equip> Inventory { get; private set; }      // 가지고 있는 장비
 
-    public List<Equip> OnEquip { get; set; }
+    public List<Equip> OnEquip { get; private set; }        // 장착되어 있는 장비
 
     public Player(string _name, string _job, int _ap, int _dp, int _hp, int _speed)
     {
@@ -37,24 +36,35 @@ public class Player : ICharacter
         HP = _hp;
         Speed = _speed;
         Gold = 0;
-        Inventory = new List<Equip>()
+        Inventory = new List<Equip>()       // 기본 지급 장비
         {
-            new Equip("무쇠 갑옷", EquipType.Armor, "방어력 +5", "무쇠로 만들어져 튼튼한 갑옷입니다."),
-            new Equip("낡은 검", EquipType.Weapon, "공격력 +2", "쉽게 볼 수 있는 낡은 검입니다."),
-            new Equip("빛나는 검", EquipType.Weapon, "공격력 +7", "반짝반짝.")
+            new Equip("무쇠 갑옷", EquipType.Armor, "방어력 +1", "무쇠로 만들어져 튼튼한 갑옷입니다.", 0, 1),
+            new Equip("낡은 검", EquipType.Weapon, "공격력 +2", "쉽게 볼 수 있는 낡은 검입니다.", 0, 2),
+            new Equip("빛나는 검", EquipType.Weapon, "공격력 +7", "반짝반짝.", 0, 3)
         };
         OnEquip = new List<Equip>() { null, null, null, null };
     }
 
-    public string ShowEquip(int idx)
+    public string OnEquipName(int idx)
     {
         if (OnEquip[idx] == null)
             return " ";
         else
             return OnEquip[idx].Name;
     }
+
+    // 장비 효과 적용 / 해제
+    public void EquipEffect(int index, bool onoff)
+    {
+        int pm = onoff == true ? 1 : -1;
+
+        if      (index == 1) { DP += 1 * pm; }
+        else if (index == 2) { AP += 2 * pm; }
+        else if (index == 3) { AP += 7 * pm; }
+    }
 }
 
+// 열겨형 장비 타입 = 방어구 / 무기구 / 장신구 / 아이템
 public enum EquipType
 {
     Armor = 0,
@@ -70,19 +80,23 @@ public class Equip
     public string Effect { get; private set; }
     public string Sub { get; private set; }
     public char State { get; private set; }
+    public int Price { get; private set; }
+    public int Index { get; private set; }
 
-    private bool isEquipped = false;
+    private bool isEquipped = false;    // 장착 = true / 해제 = false
 
-    public Equip(string _name, EquipType _type, string _effect, string _sub)
+    public Equip(string _name, EquipType _type, string _effect, string _sub, int _price, int _index)
     {
         Name = _name;
         Type = _type;
         Effect = _effect;
         Sub = _sub;
+        Price = _price;
         State = ' ';
+        Index = _index;
     }
 
-    public void Equipped(Player player)
+    public void Switch(Player player)
     {
         // 장착
         if (!isEquipped)
@@ -92,27 +106,29 @@ public class Equip
             {
                 player.OnEquip[(int)Type].State = ' ';
                 player.OnEquip[(int)Type].isEquipped = false;
+                player.EquipEffect(player.OnEquip[(int)Type].Index, false);
                 player.OnEquip[(int)Type] = null;
-            }                
-
+            }
+            
             player.OnEquip[(int)Type] = this;
             State = 'E';
+            player.EquipEffect(Index, true);
         }
         // 해제
         else
         {
             player.OnEquip[(int)Type] = null;
             State = ' ';
+            player.EquipEffect(Index, false);
         }
 
         isEquipped = !isEquipped;
     }
 }
 
-
 public class GameController
 {
-    Player player;
+    readonly Player player;
 
     public GameController(Player _player)
     {
@@ -149,6 +165,7 @@ public class GameController
 
             Console.WriteLine("1. 상태보기");
             Console.WriteLine("2. 인벤토리");
+            Console.WriteLine("3. 던전 입장");
             Console.WriteLine("\n0. 게임 종료");
 
 
@@ -160,6 +177,7 @@ public class GameController
         }
     }
 
+    // 플레이어 스탯 확인
     public void ShowStatus()
     {
         Console.Clear();
@@ -169,13 +187,13 @@ public class GameController
         Console.WriteLine($"방어력 : {player.DP}");
         Console.WriteLine($"체  력 : {player.HP}");
         Console.WriteLine($"스피드 : {player.Speed}");
-        Console.WriteLine($"GOLD : {player.Gold} G");
+        Console.WriteLine($" GOLD  : {player.Gold} G");
 
         Console.WriteLine();
-        Console.WriteLine($"     O     ← 장신구 : {player.ShowEquip(0)}");
-        Console.WriteLine($"   - | -   ← 무기구 : {player.ShowEquip(1)}");
-        Console.WriteLine($"     |     ← 방어구 : {player.ShowEquip(2)}");
-        Console.WriteLine($"    | |    ← 아이템 : {player.ShowEquip(3)}");
+        Console.WriteLine($"     O     ← 장신구 : {player.OnEquipName(0)}");
+        Console.WriteLine($"   - | -   ← 무기구 : {player.OnEquipName(1)}");
+        Console.WriteLine($"     |     ← 방어구 : {player.OnEquipName(2)}");
+        Console.WriteLine($"    | |    ← 아이템 : {player.OnEquipName(3)}");
 
 
         Console.WriteLine("\n0. 나가기");
@@ -209,14 +227,9 @@ public class GameController
         
         if (0 < input && input <= player.Inventory.Count)
         {
-            player.Inventory[input - 1].Equipped(player);
+            player.Inventory[input - 1].Switch(player);
             ShowInventory();
         }
-    }
-
-    public void SetInventory()
-    {
-
     }
 }
 
@@ -224,7 +237,10 @@ internal class Program
 {
     static void Main()
     {
-        Player player = new Player("name", "전사", 10, 10, 100, 10);
+        Console.WriteLine("당신의 이름을 알려주세요.");
+        Console.Write(">> ");
+
+        Player player = new Player(Console.ReadLine(), "전사", 10, 5, 100, 10);
 
         GameController GC = new GameController(player);
 
