@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 
 // 캐릭터 인터페이스 : 플레이어, 몬스터들의 기본 스탯 = 이름 / 레벨 / 공격력 / 방어력 / 체력 / 스피드
 public interface ICharacter
@@ -152,6 +153,19 @@ public class Shop
     }
 }
 
+public static class NPC
+{
+    public static void Talk(string _str)
+    {
+        for (int i = 0; i < _str.Length; i++)
+        {
+            Console.Write(_str[i]);
+            Thread.Sleep(25);
+        }
+        Console.WriteLine();
+    }
+}
+
 public class GameController
 {
     readonly Player player;
@@ -186,12 +200,13 @@ public class GameController
         {
             Console.Clear();
             Console.WriteLine("====================================");
-            Console.WriteLine("스파르타 마을에 오신 여러분 환영합니다.");
-            Console.WriteLine("이곳에서 던전으로 들어가기 전 활동을 할 수 있습니다.\n");
+            NPC.Talk($"스파르타 마을에 어서오세요. {player.Name} 님");
+            NPC.Talk("이곳에서 던전으로 들어가기 전 활동을 할 수 있습니다.\n");
 
-            Console.WriteLine("1. 상태보기");
+            Console.WriteLine("1. 상태 보기");
             Console.WriteLine("2. 인벤토리");
-            Console.WriteLine("3. 던전 입장");
+            Console.WriteLine("3. 상점");
+            Console.WriteLine("4. 던전 입장");
             Console.WriteLine("\n0. 게임 종료");
 
 
@@ -263,13 +278,7 @@ internal class Program
 {
     static void Main()
     {
-        Console.WriteLine(" _____  _____  _   _  _____  _____  _      _____  ______  _   _  _   _  _____  _____  _____  _   _ ");
-        Console.WriteLine("/  __ \\|  _  || \\ | |/  ___||  _  || |    |  ___| |  _  \\| | | || \\ | ||  __ \\|  ___||  _  || \\ | |");
-        Console.WriteLine("| /  \\/| | | ||  \\| |\\ `--. | | | || |    | |__   | | | || | | ||  \\| || |  \\/| |__  | | | ||  \\| |");
-        Console.WriteLine("| |    | | | || . ` | `--. \\| | | || |    |  __|  | | | || | | || . ` || | __ |  __| | | | || . ` |");
-        Console.WriteLine("| \\__/\\ \\_/ /| |\\  |/\\__/ /\\ \\_/ /| |____| |___  | |/ / | |_| || |\\  || |_\\ \\| |___ \\ \\_/ /| |\\  |");
-        Console.WriteLine(" \\____/ \\___/ \\_| \\_/\\____/  \\___/ \\_____/\\____/  |___/   \\___/ \\_| \\_/ \\____/\\____/  \\___/ \\_| \\_/");
-        Console.WriteLine("당신의 이름을 알려주세요.");
+        NPC.Talk("당신의 이름을 알려주세요.");
         Console.Write(">> ");
 
         Player player = new Player(Console.ReadLine(), "전사", 10, 5, 100, 20);
