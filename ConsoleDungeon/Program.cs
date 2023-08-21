@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 
 // 캐릭터 인터페이스 : 플레이어, 몬스터들의 기본 스탯 = 이름 / 레벨 / 공격력 / 방어력 / 체력 / 스피드
@@ -22,7 +23,7 @@ public class Player : ICharacter
     public int DP { get; private set; }
     public int HP { get; private set; }
     public int Speed { get; private set; }
-    public int Gold { get; private set; }
+    public int Gold { get; set; }
     public List<Equip> Inventory { get; private set; }      // 가지고 있는 장비
 
     private int exp = 0;        // 레벨 업을 위한 경험치
@@ -61,14 +62,22 @@ public class Player : ICharacter
         Inventory.Add(_equip);
     }
 
-    // 장비 효과 적용 / 해제
-    public void EquipEffect(int index, bool onoff)
+    // 장비 판매
+    public void SellEquip(Equip _equip)
     {
-        int pm = onoff == true ? 1 : -1;
+        if (_equip.IsEquipped)
+            EquipEffect(_equip);
 
-        if      (index == 1) { DP += 1 * pm; }
-        else if (index == 2) { AP += 2 * pm; }
-        else if (index == 3) { AP += 7 * pm; }
+        Inventory.Remove(_equip);
+    }
+
+    // 장비 효과 적용 / 해제
+    public void EquipEffect(Equip equip)
+    {
+        int pm = equip.IsEquipped ? -1 : 1;
+
+        if      (equip.Index == 1) { DP += 1 * pm; }
+        else if (equip.Index == 2) { AP += 2 * pm; }
     }
 
     // 경험치 획득
@@ -96,8 +105,7 @@ public class Equip
     public char State { get; private set; }
     public int Price { get; private set; }
     public int Index { get; private set; }
-
-    private bool isEquipped = false;    // 장착 = true / 해제 = false
+    public bool IsEquipped { get; private set; }    // 장착 = true / 해제 = false
 
     public Equip(string _name, EquipType _type, string _effect, string _sub, int _price, int _index)
     {
@@ -108,35 +116,36 @@ public class Equip
         Price = _price;
         State = ' ';
         Index = _index;
+        IsEquipped = false;
     }
 
     public void Switch(Player player)
     {
         // 장착
-        if (!isEquipped)
+        if (!IsEquipped)
         {
             // 이미 해당 타입의 장비가 장착되어 있을 때 해제 먼저
             if (player.OnEquip[(int)Type] != null)
             {
                 player.OnEquip[(int)Type].State = ' ';
-                player.OnEquip[(int)Type].isEquipped = false;
-                player.EquipEffect(player.OnEquip[(int)Type].Index, false);
+                player.OnEquip[(int)Type].IsEquipped = false;
+                player.EquipEffect(player.OnEquip[(int)Type]);
                 player.OnEquip[(int)Type] = null;
             }
 
             player.OnEquip[(int)Type] = this;
             State = 'E';
-            player.EquipEffect(Index, true);
+            player.EquipEffect(this);
+            IsEquipped = true;
         }
         // 해제
         else
         {
             player.OnEquip[(int)Type] = null;
             State = ' ';
-            player.EquipEffect(Index, false);
+            player.EquipEffect(this);
+            IsEquipped = false;
         }
-
-        isEquipped = !isEquipped;
     }
 }
 
@@ -145,7 +154,7 @@ public class Shop
     public List<Equip> AllEquips { get; private set; }
     public List<Equip> ShopList { get; private set; }
 
-    private Player player;
+    private readonly Player player;
 
     public Shop(Player _player)
     {
@@ -153,15 +162,15 @@ public class Shop
 
         AllEquips = new List<Equip>()
         {
-            new Equip("수련자의 도복", EquipType.Armor, "방어력 +5", "수련자가 입었던 도복입니다.", 1000, 4),
-            new Equip("모래 갑옷", EquipType.Armor, "체력 +10, 스피드 -5 ", "", 500, 5),
+            new Equip("수련자의 도복", EquipType.Armor, "방어력 +5", "수련자가 입었던 도복입니다.", 1000, 3),
+            new Equip("모래 갑옷", EquipType.Armor, "체력 +10, 스피드 -5", "", 500, 4),
 
-            new Equip("단검", EquipType.Weapon, "공격력 +3", "", 400, 3),
-            new Equip("대검", EquipType.Weapon, "공격력 +10, 스피드-10", "엄청나게 크고 무겁습니다.", 1000, 3),
+            new Equip("단검", EquipType.Weapon, "공격력 +3", "", 400, 5),
+            new Equip("대검", EquipType.Weapon, "공격력 +10, 스피드 -10", "엄청나게 크고 무겁습니다.", 1000, 6),
 
-            new Equip("", EquipType.Accessory, "스피드 +10", "", 600, 6),
+            new Equip("ㅁㄴㅇㅁㄴㅇㅁㄴㅇㅁ", EquipType.Accessory, "스피드 +10", "", 600, 7),
 
-            new Equip("부적", EquipType.Item, "체력 +10", "", 600, 6),
+            new Equip("부적", EquipType.Item, "체력 +10", "", 600, 8),
         };
 
         ShopList = new List<Equip>();
@@ -194,6 +203,14 @@ public class Shop
         player.GetEquip(ShopList[index]);
         ShopList[index] = null;
     }
+
+    // 상점에서 장비 판매
+    public void Sell(int index)
+    {
+        Equip equip = player.Inventory[index];
+        player.SellEquip(equip);
+        player.Gold += equip.Price / 2;
+    }
 }
 
 public class GameController
@@ -211,7 +228,7 @@ public class GameController
         {
             if (int.TryParse(Console.ReadLine(), out int input))
             {
-                if ((min <= input && input <= max))
+                if (min <= input && input <= max)
                     return input;
             }
 
@@ -253,15 +270,17 @@ public class GameController
 
             Program.ColorWriteLine("1. 상태 보기");
             Program.ColorWriteLine("2. 인벤토리");
-            Program.ColorWriteLine("3. 상점");
-            Program.ColorWriteLine("4. 던전 입장");
+            Program.ColorWriteLine("3. 상점 - 구매");
+            Program.ColorWriteLine("4. 상점 - 판매");
+            Program.ColorWriteLine("5. 던전 입장");
             Program.ColorWriteLine("\n0. 게임 종료");
 
-            int input = GetInput(0, 3);
+            int input = GetInput(0, 4);
 
             if (input == 1) ShowStatus();
             else if (input == 2) ShowInventory();
-            else if (input == 3) ShowShop();
+            else if (input == 3) ShowShopForBuy();
+            else if (input == 4) ShowShopForSell();
             else return;
         }
     }
@@ -271,8 +290,8 @@ public class GameController
     {
         Console.Clear();
         Console.WriteLine($"◇----------◇----------◇----------");
-        Console.WriteLine($"| LV. {player.Level:D2}");
-        Console.WriteLine($"| {player.Name}");
+        Console.WriteLine($"| LV. {player.Level:D2} \t {player.Name}\n");
+        Console.WriteLine("|");
         Console.WriteLine($"| 직  업 : {player.Job}");
         Console.WriteLine($"| 공격력 : {player.AP}");
         Console.WriteLine($"| 방어력 : {player.DP}");
@@ -302,17 +321,18 @@ public class GameController
             if (i < player.Inventory.Count)
             {
                 Equip equip = player.Inventory[i];
-                Console.WriteLine(string.Format("- ({0}) [{1}] {2}\t | {3} \t | {4} \t | {5}",
+                Console.WriteLine(string.Format("({0}) [{1}] {2}| {3}| {4}| {5}| {6} G",
                                                                                                 i + 1,
                                                                                                 equip.State,
-                                                                                                equip.Name.PadRight(15 - equip.Name.Length),
-                                                                                                equip.Type,
-                                                                                                equip.Effect.PadRight(20 - equip.Effect.Length),
-                                                                                                equip.Sub));
+                                                                                                equip.Name + "".PadRight(20 - Encoding.Default.GetBytes(equip.Name).Length),
+                                                                                                equip.Type.ToString().PadRight(10),
+                                                                                                equip.Effect + "".PadRight(25 - Encoding.Default.GetBytes(equip.Effect).Length),
+                                                                                                equip.Sub + "".PadRight(35 - Encoding.Default.GetBytes(equip.Sub).Length),
+                                                                                                equip.Price));
             }
             else
             {
-                Console.WriteLine(string.Format("- ({0})", i + 1));
+                Console.WriteLine(string.Format("({0})", i + 1));
             }
         }
 
@@ -328,8 +348,8 @@ public class GameController
         }
     }
 
-    // 상점
-    private void ShowShop()
+    // 상점 - 장비 구매
+    private void ShowShopForBuy()
     {
         Console.Clear();
         Program.Talk("필요한 장비를 얻을 수 있는 상점입니다.\n");
@@ -344,12 +364,12 @@ public class GameController
             
             if (equip != null)
             {
-                Console.WriteLine(string.Format("({0}) {1}\t | {2} \t | {3} \t | {4} \t | {5} G",
+                Console.WriteLine(string.Format("({0}) {1}| {2}| {3}| {4}| {5} G",
                                                                                                 i + 1,
-                                                                                                equip.Name.PadRight(15 - equip.Name.Length),
-                                                                                                equip.Type,
-                                                                                                equip.Effect.PadRight(25 - equip.Effect.Length),
-                                                                                                equip.Sub,
+                                                                                                equip.Name + "".PadRight(20 - Encoding.Default.GetBytes(equip.Name).Length),
+                                                                                                equip.Type.ToString().PadRight(10),
+                                                                                                equip.Effect + "".PadRight(25 - Encoding.Default.GetBytes(equip.Effect).Length),
+                                                                                                equip.Sub + "".PadRight(35 - Encoding.Default.GetBytes(equip.Sub).Length),
                                                                                                 equip.Price));
             }
             else
@@ -369,23 +389,20 @@ public class GameController
             // 이미 판매된 장비였을 때
             if (shop.ShopList[input - 1] == null)
             {
-                Console.WriteLine("\n이미 판매된 장비입니다. 다시 입력해주세요.");
-                Console.Write(">> ");
-                input = int.Parse(Console.ReadLine());
+                Console.Write("\n이미 판매된 장비입니다. 다시 입력해주세요.");
+                input = GetInput(0, 5);
             }
             // 돈이 부족할 때
             else if (player.Gold < shop.ShopList[input - 1].Price)
             {
-                Console.WriteLine("\n골드가 부족합니다. 다른 장비를 구매하세요.");
-                Console.Write(">> ");
-                input = int.Parse(Console.ReadLine());
+                Console.Write("\n골드가 부족합니다. 다른 장비를 구매하세요.");
+                input = GetInput(0, 5);
             }
             // 인벤토리가 가득 찼을 때
             else if (player.Inventory.Count >= 9)
             {
-                Console.WriteLine("\n인벤토리가 가득 찼습니다. 구매하시려면 먼저 장비를 판매해주세요.");
-                Console.Write(">> ");
-                input = int.Parse(Console.ReadLine());
+                Console.Write("\n인벤토리가 가득 찼습니다. 구매하시려면 먼저 장비를 판매해주세요.");
+                input = GetInput(0, 5);
             }
             else
                 break;
@@ -395,8 +412,57 @@ public class GameController
         if (1 <= input && input <= 5)
         {
             shop.Buy(input - 1);
-            ShowShop();
+            ShowShopForBuy();
         }
+    }
+
+    // 상점 - 장비 판매
+    private void ShowShopForSell()
+    {
+        Console.Clear();
+        Program.Talk("필요없는 장비를 팔아보세요.");
+        Program.Talk("원래 가격의 50%를 돌려드립니다.\n");
+        Console.WriteLine("[보유 골드]");
+        Console.WriteLine($"{player.Gold} G\n");
+
+        Console.WriteLine("[인벤토리 목록]");
+
+        for (int i = 0; i < 9; i++)
+        {
+            if (i < player.Inventory.Count)
+            {
+                Equip equip = player.Inventory[i];
+                Console.WriteLine(string.Format("({0}) {1}| {2}| {3}| {4}| {5} G",
+                                                                                                i + 1,
+                                                                                                equip.Name + "".PadRight(20 - Encoding.Default.GetBytes(equip.Name).Length),
+                                                                                                equip.Type.ToString().PadRight(10),
+                                                                                                equip.Effect + "".PadRight(25 - Encoding.Default.GetBytes(equip.Effect).Length),
+                                                                                                equip.Sub + "".PadRight(35 - Encoding.Default.GetBytes(equip.Sub).Length),
+                                                                                                equip.Price));
+            }
+            else
+            {
+                Console.WriteLine(string.Format("({0})", i + 1));
+            }
+        }
+
+        Program.ColorWriteLine("\n1 ~ 9. 해당 장비 판매");
+        Program.ColorWriteLine("0. 나가기");
+
+        int input = GetInput(0, 9);
+
+        if (input == 0)
+            return;
+
+        // 예외 처리 - 비어 있는 곳일 때
+        while (input > player.Inventory.Count)
+        {
+            Console.Write("\n해당 인벤토리는 비어 있습니다. 다시 선택해주세요.");
+            input = GetInput(0, 9);
+        }
+
+        shop.Sell(input - 1);
+        ShowShopForSell();
     }
 }
 
