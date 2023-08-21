@@ -115,7 +115,7 @@ public class Equip
                 player.EquipEffect(player.OnEquip[(int)Type].Index, false);
                 player.OnEquip[(int)Type] = null;
             }
-            
+
             player.OnEquip[(int)Type] = this;
             State = 'E';
             player.EquipEffect(Index, true);
@@ -145,7 +145,7 @@ public class Shop
 
             new Equip("단검", EquipType.Weapon, "공격력 +3", "", 400, 3),
             new Equip("대검", EquipType.Weapon, "공격력 +10, 스피드-10", "엄청나게 크고 무겁습니다.", 1000, 3),
-            
+
             new Equip("", EquipType.Accessory, "스피드 +10", "", 600, 6),
 
             new Equip("부적", EquipType.Item, "체력 +10", "", 600, 6),
@@ -168,15 +168,12 @@ public static class NPC
 
 public class GameController
 {
-    readonly Player player;
+    public Player Player { get; private set; }
 
-    public GameController(Player _player)
-    {
-        player = _player;
-    }
+    public void SetPlayer(Player _player) { Player = _player; }
 
     // 입력 받는 함수 : min <= input <= max 값만 받도록
-    private int GetInput(int min, int max)
+    public int GetInput(int min, int max)
     {
         Console.WriteLine("\n원하시는 행동을 입력해주세요.");
         Console.Write(">> ");
@@ -200,7 +197,7 @@ public class GameController
         {
             Console.Clear();
             Console.WriteLine("====================================");
-            NPC.Talk($"스파르타 마을에 어서오세요. {player.Name} 님");
+            NPC.Talk($"스파르타 마을에 어서오세요. {Player.Name} 님");
             NPC.Talk("이곳에서 던전으로 들어가기 전 활동을 할 수 있습니다.\n");
 
             Console.WriteLine("1. 상태 보기");
@@ -222,24 +219,25 @@ public class GameController
     public void ShowStatus()
     {
         Console.Clear();
-        Console.WriteLine($"LV. {player.Level}");
-        Console.WriteLine($"{player.Name} ({player.Job})");
-        Console.WriteLine($"공격력 : {player.AP}");
-        Console.WriteLine($"방어력 : {player.DP}");
-        Console.WriteLine($"체  력 : {player.HP}");
-        Console.WriteLine($"스피드 : {player.Speed}");
-        Console.WriteLine($" GOLD  : {player.Gold} G");
-
-        Console.WriteLine();
-        Console.WriteLine($"     O     ← 장신구 : {player.OnEquipName(0)}");
-        Console.WriteLine($"   - | -   ← 무기구 : {player.OnEquipName(1)}");
-        Console.WriteLine($"     |     ← 방어구 : {player.OnEquipName(2)}");
-        Console.WriteLine($"    | |    ← 아이템 : {player.OnEquipName(3)}");
-
+        Console.WriteLine($"◇--------------◇-----");
+        Console.WriteLine($"| LV. {Player.Level:D2}");
+        Console.WriteLine($"| {Player.Name}");
+        Console.WriteLine($"| 직  업 : {Player.Job}");
+        Console.WriteLine($"| 공격력 : {Player.AP}");
+        Console.WriteLine($"| 방어력 : {Player.DP}");
+        Console.WriteLine($"| 체  력 : {Player.HP}");
+        Console.WriteLine($"| 스피드 : {Player.Speed}");
+        Console.WriteLine($"|  GOLD  : {Player.Gold} G");
+        Console.WriteLine($"◇--------------◇-----");
+        Console.WriteLine($"|     O     ← 장신구 : {Player.OnEquipName(0)}");
+        Console.WriteLine($"|   - | -   ← 무기구 : {Player.OnEquipName(1)}");
+        Console.WriteLine($"|     |     ← 방어구 : {Player.OnEquipName(2)}");
+        Console.WriteLine($"|    | |    ← 아이템 : {Player.OnEquipName(3)}");
+        Console.WriteLine($"◇--------------◇-----");
 
         Console.WriteLine("\n0. 나가기");
 
-        int input = GetInput(0, 0);
+        _ = GetInput(0, 0);
     }
 
     // 인벤토리 - 장비 장착 / 해제 
@@ -250,10 +248,10 @@ public class GameController
 
         for (int i = 0; i < 9; i++)
         {
-            if (i < player.Inventory.Count)
+            if (i < Player.Inventory.Count)
             {
-                Equip equip = player.Inventory[i];
-                Console.WriteLine(string.Format("- ({0}) [{1}] {2} \t\t | {3} \t | {4} \t\t | {5}", i + 1, equip.State, equip.Name, equip.Type, equip.Effect, equip.Sub));
+                Equip equip = Player.Inventory[i];
+                Console.WriteLine(string.Format("- ({0}) [{1}] {2} \t | {3} \t | {4} \t\t | {5}", i + 1, equip.State, equip.Name.PadRight(10), equip.Type, equip.Effect, equip.Sub));
             }
             else
             {
@@ -264,11 +262,11 @@ public class GameController
         Console.WriteLine("\n1 ~ 9. 해당 장비 장착/해제");
         Console.WriteLine("0. 나가기");
 
-        int input = GetInput(0, player.Inventory.Count);
-        
-        if (0 < input && input <= player.Inventory.Count)
+        int input = GetInput(0, Player.Inventory.Count);
+
+        if (0 < input && input <= Player.Inventory.Count)
         {
-            player.Inventory[input - 1].Switch(player);
+            Player.Inventory[input - 1].Switch(Player);
             ShowInventory();
         }
     }
@@ -278,12 +276,34 @@ internal class Program
 {
     static void Main()
     {
+        GameController GC = new GameController();
+
         NPC.Talk("당신의 이름을 알려주세요.");
         Console.Write(">> ");
+        string warriorName = Console.ReadLine();
 
-        Player player = new Player(Console.ReadLine(), "전사", 10, 5, 100, 20);
+        NPC.Talk("\n당신의 직업을 골라주세요.");
+        Console.WriteLine("1. 검사");
+        Console.WriteLine("2. 전사");
+        Console.WriteLine("3. 도적");
+        Console.Write(">> ");
+        int jobChoice = GC.GetInput(1, 3);
 
-        GameController GC = new GameController(player);
+        if (jobChoice == 1)
+        {
+            Player player = new Player(warriorName, "검사", 10, 5, 100, 20);
+            GC.SetPlayer(player);
+        }
+        else if (jobChoice == 2)
+        {
+            Player player = new Player(warriorName, "전사", 10, 7, 120, 10);
+            GC.SetPlayer(player);
+        }
+        else
+        {
+            Player player = new Player(warriorName, "도적", 15, 3, 80, 30);
+            GC.SetPlayer(player);
+        }
 
         GC.VillageEnterance();
     }
