@@ -37,7 +37,7 @@ public class Player : ICharacter
         DP = _dp;
         HP = _hp;
         Speed = _speed;
-        Gold = 0;
+        Gold = 1000;
         Inventory = new List<Equip>()       // 기본 지급 장비
         {
             new Equip("무쇠 갑옷", EquipType.Armor, "방어력 +1", "무쇠로 만들어져 튼튼한 갑옷입니다.", 0, 1),
@@ -46,12 +46,19 @@ public class Player : ICharacter
         OnEquip = new List<Equip>() { null, null, null, null };
     }
 
+    // 장비 이름 반환, 없으면 ""
     public string OnEquipName(int idx)
     {
         if (OnEquip[idx] == null)
             return " ";
         else
             return OnEquip[idx].Name;
+    }
+
+    // 장비 획득
+    public void GetEquip(Equip _equip)
+    {
+        Inventory.Add(_equip);
     }
 
     // 장비 효과 적용 / 해제
@@ -64,18 +71,19 @@ public class Player : ICharacter
         else if (index == 3) { AP += 7 * pm; }
     }
 
+    // 경험치 획득
     public void GetExperience(int val)
     {
         exp += val;
     }
 }
 
-// 열겨형 장비 타입 = 방어구 / 무기구 / 장신구 / 아이템
+// 열겨형 장비 타입 = 장신구 / 무기구 / 방어구 / 아이템
 public enum EquipType
 {
-    Armor = 0,
+    Accessory = 0,
     Weapon = 1,
-    Accessory = 2,
+    Armor = 2,
     Item = 3,
 }
 
@@ -134,14 +142,19 @@ public class Equip
 
 public class Shop
 {
-    public List<Equip> ShopList { get; set; }
+    public List<Equip> AllEquips { get; private set; }
+    public List<Equip> ShopList { get; private set; }
 
-    public Shop()
+    private Player player;
+
+    public Shop(Player _player)
     {
-        ShopList = new List<Equip>()
+        player = _player;
+
+        AllEquips = new List<Equip>()
         {
             new Equip("수련자의 도복", EquipType.Armor, "방어력 +5", "수련자가 입었던 도복입니다.", 1000, 4),
-            new Equip("모래 갑옷", EquipType.Armor, "체력 +10, 스피드 -5", "", 500, 5),
+            new Equip("모래 갑옷", EquipType.Armor, "체력 +10, 스피드 -5 ", "", 500, 5),
 
             new Equip("단검", EquipType.Weapon, "공격력 +3", "", 400, 3),
             new Equip("대검", EquipType.Weapon, "공격력 +10, 스피드-10", "엄청나게 크고 무겁습니다.", 1000, 3),
@@ -150,17 +163,46 @@ public class Shop
 
             new Equip("부적", EquipType.Item, "체력 +10", "", 600, 6),
         };
+
+        ShopList = new List<Equip>();
+
+        SetShop();
+    }
+
+    // 무작위의 5개의 상품만 판매
+    private void SetShop()
+    {
+        foreach(Equip equip in ShopList)
+        {
+            AllEquips.Add(equip);
+        }
+
+        ShopList.Clear();
+
+        for (int i = 0; i < 5; i++)
+        {
+            int idx = Program.random.Next(0, AllEquips.Count);
+
+            ShopList.Add(AllEquips[idx]);
+            AllEquips.RemoveAt(idx);
+        }
+    }
+
+    // 상점에서 장비 구입
+    public void Buy(int index)
+    {
+        player.GetEquip(ShopList[index]);
+        ShopList[index] = null;
     }
 }
 
 public class GameController
 {
-    public Player Player { get; private set; }
-
-    public void SetPlayer(Player _player) { Player = _player; }
+    private Player player;
+    private Shop shop;
 
     // 입력 받는 함수 : min <= input <= max 값만 받도록
-    public int GetInput(int min, int max)
+    private int GetInput(int min, int max)
     {
         Console.WriteLine("\n원하시는 행동을 입력해주세요.");
         Console.Write(">> ");
@@ -178,13 +220,35 @@ public class GameController
         }
     }
 
+    public void GameStart()
+    {
+        Program.Talk("당신의 이름을 알려주세요.\n");
+        Console.Write(">> ");
+        string warriorName = Console.ReadLine();
+
+        Program.Talk("\n당신의 직업을 골라주세요.\n");
+        Program.ColorWriteLine("1. 검사");
+        Program.ColorWriteLine("2. 전사");
+        Program.ColorWriteLine("3. 도적");
+
+        int jobChoice = GetInput(1, 3);
+
+        Player _player;
+        if (jobChoice == 1) { _player = new Player(warriorName, "검사", 10, 5, 100, 20); }
+        else if (jobChoice == 2) { _player = new Player(warriorName, "전사", 10, 7, 120, 10); }
+        else { _player = new Player(warriorName, "도적", 15, 3, 80, 30); }
+
+        player = _player;
+        shop = new Shop(player);        
+    }
+
     public void VillageEnterance()
     {
         while (true)
         {
             Console.Clear();
             Console.WriteLine("====================================");
-            Program.Talk($"스파르타 마을에 어서오세요. {Player.Name} 님");
+            Program.Talk($"스파르타 마을에 어서오세요. {player.Name} 님");
             Program.Talk("이곳에서 던전으로 들어가기 전 활동을 할 수 있습니다.\n");
 
             Program.ColorWriteLine("1. 상태 보기");
@@ -203,23 +267,23 @@ public class GameController
     }
 
     // 플레이어 스탯 확인
-    public void ShowStatus()
+    private void ShowStatus()
     {
         Console.Clear();
         Console.WriteLine($"◇----------◇----------◇----------");
-        Console.WriteLine($"| LV. {Player.Level:D2}");
-        Console.WriteLine($"| {Player.Name}");
-        Console.WriteLine($"| 직  업 : {Player.Job}");
-        Console.WriteLine($"| 공격력 : {Player.AP}");
-        Console.WriteLine($"| 방어력 : {Player.DP}");
-        Console.WriteLine($"| 체  력 : {Player.HP}");
-        Console.WriteLine($"| 스피드 : {Player.Speed}");
-        Console.WriteLine($"|  GOLD  : {Player.Gold} G");
+        Console.WriteLine($"| LV. {player.Level:D2}");
+        Console.WriteLine($"| {player.Name}");
+        Console.WriteLine($"| 직  업 : {player.Job}");
+        Console.WriteLine($"| 공격력 : {player.AP}");
+        Console.WriteLine($"| 방어력 : {player.DP}");
+        Console.WriteLine($"| 체  력 : {player.HP}");
+        Console.WriteLine($"| 스피드 : {player.Speed}");
+        Console.WriteLine($"|  GOLD  : {player.Gold} G");
         Console.WriteLine($"◇----------◇----------◇----------");
-        Console.WriteLine($"|     O     ← 장신구 : {Player.OnEquipName(0)}");
-        Console.WriteLine($"|   - | -   ← 무기구 : {Player.OnEquipName(1)}");
-        Console.WriteLine($"|     |     ← 방어구 : {Player.OnEquipName(2)}");
-        Console.WriteLine($"|    | |    ← 아이템 : {Player.OnEquipName(3)}");
+        Console.WriteLine($"|     O     ← 장신구 : {player.OnEquipName(0)}");
+        Console.WriteLine($"|   - | -   ← 무기구 : {player.OnEquipName(1)}");
+        Console.WriteLine($"|     |     ← 방어구 : {player.OnEquipName(2)}");
+        Console.WriteLine($"|    | |    ← 아이템 : {player.OnEquipName(3)}");
         Console.WriteLine($"◇----------◇----------◇----------");
 
         Program.ColorWriteLine("\n0. 나가기");
@@ -228,17 +292,23 @@ public class GameController
     }
 
     // 인벤토리 - 장비 장착 / 해제 
-    public void ShowInventory()
+    private void ShowInventory()
     {
         Console.Clear();
         Console.WriteLine("[아이템 목록]\n");
 
         for (int i = 0; i < 9; i++)
         {
-            if (i < Player.Inventory.Count)
+            if (i < player.Inventory.Count)
             {
-                Equip equip = Player.Inventory[i];
-                Console.WriteLine(string.Format("- ({0}) [{1}] {2} \t | {3} \t | {4} \t\t | {5}", i + 1, equip.State, equip.Name.PadRight(10), equip.Type, equip.Effect, equip.Sub));
+                Equip equip = player.Inventory[i];
+                Console.WriteLine(string.Format("- ({0}) [{1}] {2}\t | {3} \t | {4} \t | {5}",
+                                                                                                i + 1,
+                                                                                                equip.State,
+                                                                                                equip.Name.PadRight(15 - equip.Name.Length),
+                                                                                                equip.Type,
+                                                                                                equip.Effect.PadRight(20 - equip.Effect.Length),
+                                                                                                equip.Sub));
             }
             else
             {
@@ -249,25 +319,84 @@ public class GameController
         Program.ColorWriteLine("\n1 ~ 9. 해당 장비 장착/해제");
         Program.ColorWriteLine("0. 나가기");
 
-        int input = GetInput(0, Player.Inventory.Count);
+        int input = GetInput(0, player.Inventory.Count);
 
-        if (0 < input && input <= Player.Inventory.Count)
+        if (0 < input && input <= player.Inventory.Count)
         {
-            Player.Inventory[input - 1].Switch(Player);
+            player.Inventory[input - 1].Switch(player);
             ShowInventory();
         }
     }
 
     // 상점
-    public void ShowShop()
+    private void ShowShop()
     {
         Console.Clear();
-        Program.Talk("필요한 아이템을 얻을 수 있는 상점입니다.\n");
+        Program.Talk("필요한 장비를 얻을 수 있는 상점입니다.\n");
         Console.WriteLine("[보유 골드]");
-        Console.WriteLine($"{Player.Gold} G\n");
+        Console.WriteLine($"{player.Gold} G\n");
 
-        Console.WriteLine("[아이템 목록]");
+        Console.WriteLine("[장비 목록]");
 
+        for (int i = 0; i < shop.ShopList.Count; i++)
+        {
+            Equip equip = shop.ShopList[i];
+            
+            if (equip != null)
+            {
+                Console.WriteLine(string.Format("({0}) {1}\t | {2} \t | {3} \t | {4} \t | {5} G",
+                                                                                                i + 1,
+                                                                                                equip.Name.PadRight(15 - equip.Name.Length),
+                                                                                                equip.Type,
+                                                                                                equip.Effect.PadRight(25 - equip.Effect.Length),
+                                                                                                equip.Sub,
+                                                                                                equip.Price));
+            }
+            else
+            {
+                Console.WriteLine($"({i + 1}) - 판매 완료 -");
+            }
+        }
+
+        Program.ColorWriteLine("\n1 ~ 5. 해당 장비 구매");
+        Program.ColorWriteLine("0. 나가기");
+
+        int input = GetInput(0, 5);
+
+        // 예외 처리
+        while (input != 0)
+        {
+            // 이미 판매된 장비였을 때
+            if (shop.ShopList[input - 1] == null)
+            {
+                Console.WriteLine("\n이미 판매된 장비입니다. 다시 입력해주세요.");
+                Console.Write(">> ");
+                input = int.Parse(Console.ReadLine());
+            }
+            // 돈이 부족할 때
+            else if (player.Gold < shop.ShopList[input - 1].Price)
+            {
+                Console.WriteLine("\n골드가 부족합니다. 다른 장비를 구매하세요.");
+                Console.Write(">> ");
+                input = int.Parse(Console.ReadLine());
+            }
+            // 인벤토리가 가득 찼을 때
+            else if (player.Inventory.Count >= 9)
+            {
+                Console.WriteLine("\n인벤토리가 가득 찼습니다. 구매하시려면 먼저 장비를 판매해주세요.");
+                Console.Write(">> ");
+                input = int.Parse(Console.ReadLine());
+            }
+            else
+                break;
+        }
+
+        // 그 외 상점에서 구매가 가능한 경우
+        if (1 <= input && input <= 5)
+        {
+            shop.Buy(input - 1);
+            ShowShop();
+        }
     }
 }
 
@@ -279,7 +408,7 @@ internal class Program
         for (int i = 0; i < _str.Length; i++)
         {
             Console.Write(_str[i]);
-            Thread.Sleep(25);
+            Thread.Sleep(1); // 25
         }
         Console.WriteLine();
     }
@@ -293,29 +422,12 @@ internal class Program
         Console.ResetColor();
     }
 
+    public static Random random = new Random();
+
     static void Main()
     {
         GameController GC = new GameController();
-
-        Talk("당신의 이름을 알려주세요.\n");
-        Console.Write(">> ");
-        string warriorName = Console.ReadLine();
-
-        Talk("\n당신의 직업을 골라주세요.\n");
-        ColorWriteLine("1. 검사");
-        ColorWriteLine("2. 전사");
-        ColorWriteLine("3. 도적");
-
-        int jobChoice = GC.GetInput(1, 3);
-
-        Player player;
-
-        if      (jobChoice == 1) { player = new Player(warriorName, "검사", 10, 5, 100, 20); }
-        else if (jobChoice == 2) { player = new Player(warriorName, "전사", 10, 7, 120, 10); }
-        else                     { player = new Player(warriorName, "도적", 15, 3, 80, 30); }
-
-        GC.SetPlayer(player);
-
+        GC.GameStart();
         GC.VillageEnterance();
     }
 }
