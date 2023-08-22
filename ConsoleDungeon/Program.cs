@@ -362,6 +362,7 @@ public class Monster : ICharacter
     }
 }
 
+// 열거형 던전 타입 / Easy : 3, Normal : 4, Hard : 6, Boss
 public enum DungeonType
 {
     Easy = 3,
@@ -385,6 +386,7 @@ public class Dungeon
         SetMonsters();
     }
 
+    // 던전에 몬스터 생성
     private void SetMonsters()
     {
         for (int i = 0; i < Count; i++)
@@ -393,6 +395,7 @@ public class Dungeon
         }
     }
 
+    // 던전 난이도 상승 함수
     public void GetStrong()
     {
         if (Type == DungeonType.Easy)
@@ -764,24 +767,21 @@ public class GameController
 
             if (player.HP < 0)
             {
-                GameOver();
-            }
-            else if (mon.HP < 0)
-            {
-                Console.Clear();
-                Program.Talk($"{mon.Name}은 쓰러졌습니다.");
-
-                Program.Talk($"{mon.Gold} G 획득 !");
-                player.Gold += mon.Gold;
-
-                Program.Talk($"{mon.Level}의 경험치 획득 !");
-                player.GetExperience(mon.Level);
-
-                Program.ColorWriteLine("\n0. 돌아가기");
-
-                _ = GetInput(0, 0);
+                GameFail();
             }
         }
+
+        Program.Talk($"{mon.Name}은 쓰러졌습니다.");
+
+        Program.Talk($"{mon.Gold} G 획득 !");
+        player.Gold += mon.Gold;
+
+        Program.Talk($"{mon.Level}의 경험치 획득 !");
+        player.GetExperience(mon.Level);
+
+        Program.ColorWriteLine("\n0. 돌아가기");
+
+        _ = GetInput(0, 0);
 
         Program.script.Clear();
         dungeon.Monsters.RemoveAt(0);
@@ -789,6 +789,7 @@ public class GameController
         
     }
 
+    // 전투 중 ICharacter의 행동
     private void CharacterAction(int input, ICharacter main, ICharacter target)
     {
         if (main.HP <= 0)
@@ -813,8 +814,17 @@ public class GameController
         }
         else if (input == 2)
         {
-            main.DefenseStance = true;
-            Program.script.Enqueue($"{main.Name}은 방어 태세에 들어갔다.");
+            if (main.DefenseStance)
+            {
+                main.DefenseStance = false;
+                Program.script.Enqueue($"{main.Name}은 힘들어, 연속으로 방어 태세를 갖추지 못했다...");
+            }
+            else
+            {
+                main.DefenseStance = true;
+                Program.script.Enqueue($"{main.Name}은 방어 태세에 들어갔다.");
+            }
+            
         }
         else if (input == 3)
         {
@@ -824,6 +834,7 @@ public class GameController
         }
     }
 
+    // 게임 종료 - 승리
     public void GameWin()
     {
         Console.Clear();
@@ -832,21 +843,20 @@ public class GameController
         Program.Talk("던전을 정복했습니다 !");
 
         Program.ColorWriteLine("\n0. 게임 종료");
-        Console.Write(">> ");
 
         int input = GetInput(0, 0);
 
         if (input == 0) Environment.Exit(0);
     }
 
-    public void GameOver()
+    // 게임 종료 - 패배
+    public void GameFail()
     {
         Console.Clear();
         Program.Talk($"{player.Name}은 쓰러졌습니다...");
         Program.Talk($"다시 도전해보세요 !");
 
         Program.ColorWriteLine("\n0. 게임 종료");
-        Console.Write(">> ");
 
         int input = GetInput(0, 0);
 
@@ -867,15 +877,15 @@ internal class Program
         Console.WriteLine();
     }
 
-    // 문자열의 배경색과 글자색을 변경시켜 출력하는 함수
-    public static void ColorWriteLine(string _str, ConsoleColor _writeColor = ConsoleColor.Yellow, ConsoleColor _backColor = ConsoleColor.Black)
+    // 문자열의 글자색을 변경시켜 출력하는 함수
+    public static void ColorWriteLine(string _str, ConsoleColor _writeColor = ConsoleColor.Yellow)
     {
-        Console.BackgroundColor = _backColor;
         Console.ForegroundColor = _writeColor;
         Console.WriteLine(_str);
         Console.ResetColor();
     }
 
+    // 커서의 위치를 옮기고 문자열을 출력하는 함수
     public static void CursorWrite(int left, int top, string _str)
     {
         Console.SetCursorPosition(left, top);
@@ -884,6 +894,7 @@ internal class Program
 
     public static Random random = new Random();
 
+    // 전투 메세지를 담고 있는 큐
     public static Queue<string> script = new Queue<string>();
 
     static void Main()
