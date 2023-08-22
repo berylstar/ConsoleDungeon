@@ -78,6 +78,26 @@ public class Player : ICharacter
 
         if      (equip.Index == 1) { DP += 1 * pm; }
         else if (equip.Index == 2) { AP += 2 * pm; }
+        else if (equip.Index == 3) { DP += 7 * pm; }
+        else if (equip.Index == 4) { AP -= 2 * pm; DP += 15 * pm; }
+        else if (equip.Index == 5) { DP += 5 * pm; HP += 10 * pm; }
+        else if (equip.Index == 6) { DP += 7 * pm; Speed -= 10 * pm; }
+        else if (equip.Index == 7) { DP += 3 * pm; }
+        else if (equip.Index == 8) { AP += 5 * pm; Speed -= 10 * pm; }
+        else if (equip.Index == 9) { AP += 2 * pm; Speed += 10 * pm; }
+        else if (equip.Index == 10) { AP += 7 * pm; HP -= 15 * pm; }
+        else if (equip.Index == 11) { AP += 10 * pm; }
+        else if (equip.Index == 12) { Speed += 20 * pm; }
+        else if (equip.Index == 13) { DP += 5 * pm; }
+        else if (equip.Index == 14) { HP += 5 * pm; }
+        else if (equip.Index == 15) { AP += 10 * pm; DP -= 20 * pm; }
+        else if (equip.Index == 16) { Speed += 10 * pm; }
+        else if (equip.Index == 17) { AP -= 2 * pm; HP += 20 * pm; }
+        else if (equip.Index == 18) { DP += 10 * pm; HP -= 10 * pm; }
+        else if (equip.Index == 19) { AP += 3 * pm; }
+        else if (equip.Index == 20) { AP += 1 * pm; Speed += 10 * pm; }
+        else if (equip.Index == 21) { HP += 30 * pm; }
+        else if (equip.Index == 22) { AP += 5 * pm; Speed -= 10 * pm; }
     }
 
     // 경험치 획득
@@ -162,15 +182,29 @@ public class Shop
 
         AllEquips = new List<Equip>()
         {
-            new Equip("수련자의 도복", EquipType.Armor, "방어력 +5", "수련자가 입었던 도복입니다.", 1000, 3),
-            new Equip("모래 갑옷", EquipType.Armor, "체력 +10, 스피드 -5", "", 500, 4),
+            new Equip("수련자의 도복", EquipType.Armor, "방어력 +7", "수련 집중에 효과적입니다.", 2500, 3),
+            new Equip("청동 갑옷", EquipType.Armor, "방어력 +15, 공격력 -2", "확실히 무거운 갑옷입니다.", 1000, 4),
+            new Equip("호랑이 가죽", EquipType.Armor, "방어력 +5, 체력 +10", "호랑이는 죽어서 가죽을 남기고", 1500, 5),
+            new Equip("검투사의 보호대", EquipType.Armor, "방어력 +7, 스피드 -10", "검투사 전용 보호구입니다.", 1800, 6),
+            new Equip("천 갑옷", EquipType.Armor, "방어력 +3", "가성비 좋은 갑옷입니다.", 500, 7),
 
-            new Equip("단검", EquipType.Weapon, "공격력 +3", "", 400, 5),
-            new Equip("대검", EquipType.Weapon, "공격력 +10, 스피드 -10", "엄청나게 크고 무겁습니다.", 1000, 6),
+            new Equip("커다란 대검", EquipType.Weapon, "공격력 +5, 스피드 -10", "엄청나게 크고 무겁습니다.", 1000, 8),
+            new Equip("대나무 창", EquipType.Weapon, "공격력 +2, 스피드 +10", "가볍고 날카롭습니다.", 1500, 9),
+            new Equip("양날의 검", EquipType.Weapon, "공격력 +7, 체력 -15", "말 그대로 \"양날의 검\"", 800, 10),
+            new Equip("검은 검", EquipType.Weapon, "공격력 +10", "sword = sword", 3000, 11),
+            new Equip("단검", EquipType.Weapon, "스피드 +20", "작지만 누구보다 빠르다.", 1200, 12),
 
-            new Equip("ㅁㄴㅇㅁㄴㅇㅁㄴㅇㅁ", EquipType.Accessory, "스피드 +10", "", 600, 7),
+            new Equip("빛나는 왕관", EquipType.Accessory, "방어력 +5", "아직은 반짝반짝합니다.", 800, 13),
+            new Equip("낡은 투구", EquipType.Accessory, "체력 +5", "누군가가 사용했던 것 같습니다.", 0, 14),
+            new Equip("붉은 목걸이", EquipType.Accessory, "공격력 +10, 방어력 -20", "쓴 사람은 저주를 받습니다.", 1200, 15),
+            new Equip("낡은 후드", EquipType.Accessory, "스피드 +10", "얼굴을 가리는데 효과적입니다.", 500, 16),
+            new Equip("검은 반지", EquipType.Accessory, "체력 +20, 공격력 -2", "쇠약해지지만, 살아남을 겁니다.", 800, 17),
 
-            new Equip("부적", EquipType.Item, "체력 +10", "", 600, 8),
+            new Equip("부적", EquipType.Item, "방어력 +10, 체력 -10", "용한 부적입니다.", 1500, 18),
+            new Equip("맹독병", EquipType.Item, "공격력 +3", "무기에 발라보세요.", 1200, 19),
+            new Equip("보급형 아이템", EquipType.Item, "공격력 +1, 스피드 +5", "초보 모험가를 위한 아이템.", 0, 20),
+            new Equip("비상약", EquipType.Item, "체력 +30", "비상시를 대비합니다.", 1500, 21),
+            new Equip("모래 주머니", EquipType.Item, "공격력 +5, 스피드 -10", "모래주머니 수련법", 800, 22),
         };
 
         ShopList = new List<Equip>();
@@ -200,6 +234,7 @@ public class Shop
     // 상점에서 장비 구입
     public void Buy(int index)
     {
+        player.Gold -= ShopList[index].Price;
         player.GetEquip(ShopList[index]);
         ShopList[index] = null;
     }
@@ -237,6 +272,7 @@ public class GameController
         }
     }
 
+    // 처음 게임 시작
     public void GameStart()
     {
         Program.Talk("당신의 이름을 알려주세요.\n");
@@ -244,21 +280,22 @@ public class GameController
         string warriorName = Console.ReadLine();
 
         Program.Talk("\n당신의 직업을 골라주세요.\n");
-        Program.ColorWriteLine("1. 검사");
-        Program.ColorWriteLine("2. 전사");
-        Program.ColorWriteLine("3. 도적");
+        Program.ColorWriteLine("1. 검사 : 밸런스형");
+        Program.ColorWriteLine("2. 전사 : 방어형");
+        Program.ColorWriteLine("3. 도적 : 스피드형");
 
         int jobChoice = GetInput(1, 3);
 
         Player _player;
         if (jobChoice == 1) { _player = new Player(warriorName, "검사", 10, 5, 100, 20); }
-        else if (jobChoice == 2) { _player = new Player(warriorName, "전사", 10, 7, 120, 10); }
-        else { _player = new Player(warriorName, "도적", 15, 3, 80, 30); }
+        else if (jobChoice == 2) { _player = new Player(warriorName, "전사", 10, 10, 120, 10); }
+        else { _player = new Player(warriorName, "도적", 12, 0, 80, 30); }
 
         player = _player;
         shop = new Shop(player);        
     }
 
+    // 마을
     public void VillageEnterance()
     {
         while (true)
@@ -266,7 +303,7 @@ public class GameController
             Console.Clear();
             Console.WriteLine("====================================");
             Program.Talk($"스파르타 마을에 어서오세요. {player.Name} 님");
-            Program.Talk("이곳에서 던전으로 들어가기 전 활동을 할 수 있습니다.\n");
+            Program.Talk("이곳에서 콘솔 던전으로 들어가기 전 활동을 할 수 있습니다.\n");
 
             Program.ColorWriteLine("1. 상태 보기");
             Program.ColorWriteLine("2. 인벤토리");
@@ -290,7 +327,7 @@ public class GameController
     {
         Console.Clear();
         Console.WriteLine($"◇----------◇----------◇----------");
-        Console.WriteLine($"| LV. {player.Level:D2} \t {player.Name}\n");
+        Console.WriteLine($"| LV. {player.Level:D2} \t {player.Name}");
         Console.WriteLine("|");
         Console.WriteLine($"| 직  업 : {player.Job}");
         Console.WriteLine($"| 공격력 : {player.AP}");
