@@ -12,6 +12,12 @@ public interface ICharacter
     int DP { get; }
     int HP { get; }
     int Speed { get; }
+
+    bool DefenseStance { get; set; }
+    int Focus { get; set; }
+
+    void GetDamaged(int damage);
+    bool IsDefense();
 }
 
 public class Player : ICharacter
@@ -25,9 +31,12 @@ public class Player : ICharacter
     public int Speed { get; private set; }
     public int Gold { get; set; }
     public List<Equip> Inventory { get; private set; }      // 가지고 있는 장비
+    public List<Equip> OnEquip { get; private set; }        // 장착되어 있는 장비
 
     private int exp = 0;        // 레벨 업을 위한 경험치
-    public List<Equip> OnEquip { get; private set; }        // 장착되어 있는 장비
+    
+    public bool DefenseStance { get; set; }
+    public int Focus { get; set; }
 
     public Player(string _name, string _job, int _ap, int _dp, int _hp, int _speed)
     {
@@ -45,6 +54,8 @@ public class Player : ICharacter
             new Equip("낡은 검", EquipType.Weapon, "공격력 +2", "쉽게 볼 수 있는 낡은 검입니다.", 0, 2),
         };
         OnEquip = new List<Equip>() { null, null, null, null };
+        DefenseStance = false;
+        Focus = 0;
     }
 
     // 장비 이름 반환, 없으면 ""
@@ -78,12 +89,66 @@ public class Player : ICharacter
 
         if      (equip.Index == 1) { DP += 1 * pm; }
         else if (equip.Index == 2) { AP += 2 * pm; }
+        else if (equip.Index == 3) { DP += 7 * pm; }
+        else if (equip.Index == 4) { AP -= 2 * pm; DP += 15 * pm; }
+        else if (equip.Index == 5) { DP += 5 * pm; HP += 10 * pm; }
+        else if (equip.Index == 6) { DP += 7 * pm; Speed -= 10 * pm; }
+        else if (equip.Index == 7) { DP += 3 * pm; }
+        else if (equip.Index == 8) { AP += 5 * pm; Speed -= 10 * pm; }
+        else if (equip.Index == 9) { AP += 2 * pm; Speed += 10 * pm; }
+        else if (equip.Index == 10) { AP += 7 * pm; HP -= 15 * pm; }
+        else if (equip.Index == 11) { AP += 10 * pm; }
+        else if (equip.Index == 12) { Speed += 20 * pm; }
+        else if (equip.Index == 13) { DP += 5 * pm; }
+        else if (equip.Index == 14) { HP += 5 * pm; }
+        else if (equip.Index == 15) { AP += 10 * pm; DP -= 20 * pm; }
+        else if (equip.Index == 16) { Speed += 10 * pm; }
+        else if (equip.Index == 17) { AP -= 2 * pm; HP += 20 * pm; }
+        else if (equip.Index == 18) { DP += 10 * pm; HP -= 10 * pm; }
+        else if (equip.Index == 19) { AP += 3 * pm; }
+        else if (equip.Index == 20) { AP += 1 * pm; Speed += 10 * pm; }
+        else if (equip.Index == 21) { HP += 30 * pm; }
+        else if (equip.Index == 22) { AP += 5 * pm; Speed -= 10 * pm; }
     }
 
-    // 경험치 획득
+    // 경험치 획득 + 레벨 업 확인
     public void GetExperience(int val)
     {
         exp += val;
+
+        while (Level <= exp)
+        {
+            exp -= Level;
+
+            Program.Talk("\n ※ 레벨 업 ! ※");
+            Program.Talk($" ※공격력 + {(int)Math.Ceiling(Level / 3f)}, 체력 + 10 ※");
+
+            AP += (int)Math.Ceiling(Level / 3f);
+            HP += 10;
+
+            Level += 1;
+
+        }
+    }
+
+    public void GetDamaged(int damage)
+    {
+        HP -= damage;
+    }
+
+    public bool IsDefense()
+    {
+        if (Program.random.Next(0, 101) <= DP)
+            return true;
+        else if (DefenseStance)
+            return true;
+        else
+            return false;
+    }
+
+    public void TEST()
+    {
+        AP += 100;
     }
 }
 
@@ -162,15 +227,29 @@ public class Shop
 
         AllEquips = new List<Equip>()
         {
-            new Equip("수련자의 도복", EquipType.Armor, "방어력 +5", "수련자가 입었던 도복입니다.", 1000, 3),
-            new Equip("모래 갑옷", EquipType.Armor, "체력 +10, 스피드 -5", "", 500, 4),
+            new Equip("수련자의 도복", EquipType.Armor, "방어력 +7", "수련 집중에 효과적입니다.", 2500, 3),
+            new Equip("청동 갑옷", EquipType.Armor, "방어력 +15, 공격력 -2", "확실히 무거운 갑옷입니다.", 1000, 4),
+            new Equip("호랑이 가죽", EquipType.Armor, "방어력 +5, 체력 +10", "호랑이는 죽어서 가죽을 남기고", 1500, 5),
+            new Equip("검투사의 보호대", EquipType.Armor, "방어력 +7, 스피드 -10", "검투사 전용 보호구입니다.", 1800, 6),
+            new Equip("천 갑옷", EquipType.Armor, "방어력 +3", "가성비 좋은 갑옷입니다.", 500, 7),
 
-            new Equip("단검", EquipType.Weapon, "공격력 +3", "", 400, 5),
-            new Equip("대검", EquipType.Weapon, "공격력 +10, 스피드 -10", "엄청나게 크고 무겁습니다.", 1000, 6),
+            new Equip("커다란 대검", EquipType.Weapon, "공격력 +5, 스피드 -10", "엄청나게 크고 무겁습니다.", 1000, 8),
+            new Equip("대나무 창", EquipType.Weapon, "공격력 +2, 스피드 +10", "가볍고 날카롭습니다.", 1500, 9),
+            new Equip("양날의 검", EquipType.Weapon, "공격력 +7, 체력 -15", "말 그대로 \"양날의 검\"", 800, 10),
+            new Equip("검은 검", EquipType.Weapon, "공격력 +10", "sword = sword", 3000, 11),
+            new Equip("단검", EquipType.Weapon, "스피드 +20", "작지만 누구보다 빠르다.", 1200, 12),
 
-            new Equip("ㅁㄴㅇㅁㄴㅇㅁㄴㅇㅁ", EquipType.Accessory, "스피드 +10", "", 600, 7),
+            new Equip("빛나는 왕관", EquipType.Accessory, "방어력 +5", "아직은 반짝반짝합니다.", 800, 13),
+            new Equip("낡은 투구", EquipType.Accessory, "체력 +5", "누군가가 사용했던 것 같습니다.", 0, 14),
+            new Equip("붉은 목걸이", EquipType.Accessory, "공격력 +10, 방어력 -20", "쓴 사람은 저주를 받습니다.", 1200, 15),
+            new Equip("낡은 후드", EquipType.Accessory, "스피드 +10", "얼굴을 가리는데 효과적입니다.", 500, 16),
+            new Equip("검은 반지", EquipType.Accessory, "체력 +20, 공격력 -2", "쇠약해지지만, 살아남을 겁니다.", 800, 17),
 
-            new Equip("부적", EquipType.Item, "체력 +10", "", 600, 8),
+            new Equip("부적", EquipType.Item, "방어력 +10, 체력 -10", "용한 부적입니다.", 1500, 18),
+            new Equip("맹독병", EquipType.Item, "공격력 +3", "무기에 발라보세요.", 1200, 19),
+            new Equip("보급형 아이템", EquipType.Item, "공격력 +1, 스피드 +5", "초보 모험가를 위한 아이템.", 0, 20),
+            new Equip("비상약", EquipType.Item, "체력 +30", "비상시를 대비합니다.", 1500, 21),
+            new Equip("모래 주머니", EquipType.Item, "공격력 +5, 스피드 -10", "모래주머니 수련법", 800, 22),
         };
 
         ShopList = new List<Equip>();
@@ -200,6 +279,7 @@ public class Shop
     // 상점에서 장비 구입
     public void Buy(int index)
     {
+        player.Gold -= ShopList[index].Price;
         player.GetEquip(ShopList[index]);
         ShopList[index] = null;
     }
@@ -213,10 +293,138 @@ public class Shop
     }
 }
 
+public enum MonsterType
+{
+    Goblin = 0,
+    Slime = 1,
+    Wolf = 2,
+    Zombie = 3,
+    Golem = 4,
+    Ghost = 5,
+    Witch = 6,
+    Wizard = 7,
+    Knight = 8,
+    Guardian = 9,
+}
+
+public class Monster : ICharacter
+{
+    public string Name { get; private set; }
+    public int Level { get; private set; }
+    public int AP { get; private set; }
+    public int DP { get; private set; }
+    public int HP { get; private set; }
+    public int Speed { get; private set; }
+    public int Gold { get; private set; }
+
+    public bool DefenseStance { get; set; }
+    public int Focus { get; set; }
+
+    public Monster(string _name, int _level)
+    {
+        Name = _name;
+        Level = _level;
+        AP = 5 + Program.random.Next(_level, _level * 3);
+        DP = Program.random.Next(_level, _level * 5);
+        HP = 50 + Program.random.Next(0, _level) * 10;
+        Speed = 5 + Program.random.Next(0, _level) * 5;
+        Gold = 300 + Program.random.Next(_level, _level * 2) * 100;
+        DefenseStance = false;
+        Focus = 0;
+    }
+
+    public Monster(string _name, int _level, int _ap, int _dp, int _hp, int _speed, int _gold)
+    {
+        Name = _name;
+        Level = _level;
+        DP = _dp;
+        AP = _ap;
+        HP = _hp;
+        Speed = _speed;
+        Gold = _gold;
+        DefenseStance = false;
+        Focus = 0;
+    }
+
+    public void GetDamaged(int damage)
+    {
+        HP -= damage;
+    }
+
+    public bool IsDefense()
+    {
+        if (Program.random.Next(0, 101) <= DP)
+            return true;
+        else if (DefenseStance)
+            return true;
+        else
+            return false;
+    }
+}
+
+// 열거형 던전 타입 / Easy : 3, Normal : 4, Hard : 6, Boss
+public enum DungeonType
+{
+    Easy = 3,
+    Normal = 4,
+    Hard = 6,
+    Boss = 10,
+}
+
+public class Dungeon
+{
+    public DungeonType Type { get; private set; }
+    public int Count { get; set; }
+    public List<Monster> Monsters { get; private set; }
+
+    public Dungeon()
+    {
+        Type = DungeonType.Easy;
+        Count = (int)DungeonType.Easy;
+
+        Monsters = new List<Monster>();
+        SetMonsters();
+    }
+
+    // 던전에 몬스터 생성
+    private void SetMonsters()
+    {
+        for (int i = 0; i < Count; i++)
+        {
+            Monsters.Add(new Monster(((MonsterType)Program.random.Next(0, 10)).ToString(), i + 1));
+        }
+    }
+
+    // 던전 난이도 상승 함수
+    public void GetStrong()
+    {
+        if (Type == DungeonType.Easy)
+        {
+            Type = DungeonType.Normal;
+            Count = (int)DungeonType.Normal;
+            SetMonsters();
+        }
+        else if (Type == DungeonType.Normal)
+        {
+            Type = DungeonType.Hard;
+            Count = (int)DungeonType.Hard;
+            SetMonsters();
+        }
+        else if (Type == DungeonType.Hard)
+        {
+            Type = DungeonType.Boss;
+            Count = 1;
+            Monsters.Add(new Monster("Dragon", 10, 40, 40, 200, 40, 10000));
+        }
+    }
+}
+
 public class GameController
 {
     private Player player;
     private Shop shop;
+    private Dungeon dungeon;
+    private Monster mon;
 
     // 입력 받는 함수 : min <= input <= max 값만 받도록
     private int GetInput(int min, int max)
@@ -237,6 +445,7 @@ public class GameController
         }
     }
 
+    // 처음 게임 시작
     public void GameStart()
     {
         Program.Talk("당신의 이름을 알려주세요.\n");
@@ -244,43 +453,49 @@ public class GameController
         string warriorName = Console.ReadLine();
 
         Program.Talk("\n당신의 직업을 골라주세요.\n");
-        Program.ColorWriteLine("1. 검사");
-        Program.ColorWriteLine("2. 전사");
-        Program.ColorWriteLine("3. 도적");
+        Program.ColorWriteLine("1. 검사 : 밸런스형");
+        Program.ColorWriteLine("2. 전사 : 방어형");
+        Program.ColorWriteLine("3. 도적 : 스피드형");
 
         int jobChoice = GetInput(1, 3);
 
         Player _player;
         if (jobChoice == 1) { _player = new Player(warriorName, "검사", 10, 5, 100, 20); }
-        else if (jobChoice == 2) { _player = new Player(warriorName, "전사", 10, 7, 120, 10); }
-        else { _player = new Player(warriorName, "도적", 15, 3, 80, 30); }
+        else if (jobChoice == 2) { _player = new Player(warriorName, "전사", 10, 10, 120, 10); }
+        else { _player = new Player(warriorName, "도적", 12, 0, 80, 30); }
 
         player = _player;
-        shop = new Shop(player);        
+        shop = new Shop(player);
+
+        dungeon = new Dungeon();
     }
 
+    // 마을
     public void VillageEnterance()
     {
+        player.TEST();
+
         while (true)
         {
             Console.Clear();
             Console.WriteLine("====================================");
             Program.Talk($"스파르타 마을에 어서오세요. {player.Name} 님");
-            Program.Talk("이곳에서 던전으로 들어가기 전 활동을 할 수 있습니다.\n");
+            Program.Talk("이곳에서 콘솔 던전으로 들어가기 전 활동을 할 수 있습니다.\n");
 
             Program.ColorWriteLine("1. 상태 보기");
             Program.ColorWriteLine("2. 인벤토리");
             Program.ColorWriteLine("3. 상점 - 구매");
             Program.ColorWriteLine("4. 상점 - 판매");
-            Program.ColorWriteLine("5. 던전 입장");
+            Program.ColorWriteLine($"\n5. 던전 입장 - {dungeon.Type}", ConsoleColor.Red);
             Program.ColorWriteLine("\n0. 게임 종료");
 
-            int input = GetInput(0, 4);
+            int input = GetInput(0, 5);
 
             if (input == 1) ShowStatus();
             else if (input == 2) ShowInventory();
             else if (input == 3) ShowShopForBuy();
             else if (input == 4) ShowShopForSell();
+            else if (input == 5) { InDungeon(); }
             else return;
         }
     }
@@ -290,12 +505,12 @@ public class GameController
     {
         Console.Clear();
         Console.WriteLine($"◇----------◇----------◇----------");
-        Console.WriteLine($"| LV. {player.Level:D2} \t {player.Name}\n");
+        Console.WriteLine($"| LV. {player.Level:D2} \t {player.Name}");
         Console.WriteLine("|");
         Console.WriteLine($"| 직  업 : {player.Job}");
+        Console.WriteLine($"| 체  력 : {player.HP}");
         Console.WriteLine($"| 공격력 : {player.AP}");
         Console.WriteLine($"| 방어력 : {player.DP}");
-        Console.WriteLine($"| 체  력 : {player.HP}");
         Console.WriteLine($"| 스피드 : {player.Speed}");
         Console.WriteLine($"|  GOLD  : {player.Gold} G");
         Console.WriteLine($"◇----------◇----------◇----------");
@@ -464,6 +679,189 @@ public class GameController
         shop.Sell(input - 1);
         ShowShopForSell();
     }
+
+    // 던전 입장 - 전투 전
+    private void InDungeon()
+    {
+        while (dungeon.Count > 0)
+        {
+            Console.Clear();
+            Program.Talk($"{dungeon.Type} 난이도의 던전입니다.");
+            Program.Talk($"앞으로 {dungeon.Count}마리의 몬스터를 처치해야 합니다.\n");
+
+            Program.ColorWriteLine("1. 상태 보기");
+            Program.ColorWriteLine("2. 인벤토리");
+            Program.ColorWriteLine("\n3. 이어서 진행하기", ConsoleColor.Red);
+
+            int input = GetInput(1, 3);
+
+            if (input == 1) ShowStatus();
+            else if (input == 2) ShowInventory();
+            else ShowBattle();
+        }
+
+        // 던전 난이도 증가
+        if (dungeon.Type == DungeonType.Boss)
+        {
+            GameWin();
+        }
+        else
+        {
+            dungeon.GetStrong();
+        }
+    }
+
+    // 몬스터와 전투
+    private void ShowBattle()
+    {
+        mon = dungeon.Monsters[0];
+        Program.script.Enqueue($"{mon.Name}이 나타났습니다 !");
+
+        while (mon.HP > 0)
+        {
+            Console.Clear();
+            Program.CursorWrite(35, 0, $"◇----------◇----------◇----------");
+            Program.CursorWrite(35, 1, $"| LV. {mon.Level:D2} \t {mon.Name}");
+            Program.CursorWrite(35, 2, "|");
+            Program.CursorWrite(35, 3, $"| 체  력 : {mon.HP}");
+            Program.CursorWrite(35, 4, $"| 공격력 : {mon.AP}");
+            Program.CursorWrite(35, 5, $"| 방어력 : {mon.DP}");
+            Program.CursorWrite(35, 6, $"| 스피드 : {mon.Speed}");
+            Program.CursorWrite(35, 7, $"| 집  중 : {mon.Focus}");
+            Program.CursorWrite(35, 8, $"◇----------◇----------◇----------");
+
+            Console.WriteLine($"◇----------◇----------◇----------");
+            Console.WriteLine($"| LV. {player.Level:D2} \t {player.Name}");
+            Console.WriteLine("|");
+            Console.WriteLine($"| 체  력 : {player.HP}");
+            Console.WriteLine($"| 공격력 : {player.AP}");
+            Console.WriteLine($"| 방어력 : {player.DP}");
+            Console.WriteLine($"| 스피드 : {player.Speed}");
+            Console.WriteLine($"| 스피드 : {player.Speed}");
+            Console.WriteLine($"| 집  중 : {player.Focus}");
+            Console.WriteLine($"◇----------◇----------◇----------\n");
+
+            while (Program.script.Count > 0)
+            {
+                Program.Talk(Program.script.Dequeue());
+            }
+
+            Program.ColorWriteLine("\n1. 공격");
+            Program.ColorWriteLine("2. 방어");
+            Program.ColorWriteLine("3. 집중");
+
+            int input = GetInput(1, 3);
+
+            if (mon.Speed > player.Speed)
+            {
+                CharacterAction(Program.random.Next(0, 6) % 3 + 1, mon, player);
+                Console.WriteLine();
+                CharacterAction(input, player, mon);
+            }
+            else
+            {
+                CharacterAction(input, player, mon);
+                Console.WriteLine();
+                CharacterAction(Program.random.Next(0, 6) % 3 + 1, mon, player);
+            }
+
+            if (player.HP < 0)
+            {
+                GameFail();
+            }
+        }
+
+        Program.Talk($"{mon.Name}은 쓰러졌습니다.");
+
+        Program.Talk($"{mon.Gold} G 획득 !");
+        player.Gold += mon.Gold;
+
+        Program.Talk($"{mon.Level}의 경험치 획득 !");
+        player.GetExperience(mon.Level);
+
+        Program.ColorWriteLine("\n0. 돌아가기");
+
+        _ = GetInput(0, 0);
+
+        Program.script.Clear();
+        dungeon.Monsters.RemoveAt(0);
+        dungeon.Count -= 1;
+        
+    }
+
+    // 전투 중 ICharacter의 행동
+    private void CharacterAction(int input, ICharacter main, ICharacter target)
+    {
+        if (main.HP <= 0)
+            return;
+
+        if (input == 1)
+        {
+            main.DefenseStance = false;
+
+            if (target.IsDefense())
+            {
+                Program.script.Enqueue($"{main.Name}의 공격 !");
+                Program.script.Enqueue($"하지만, {target.Name}은 {main.Name}의 공격을 막아냈다 !");
+            }
+            else
+            {
+                target.GetDamaged(main.AP * (2 * main.Focus + 1));
+                Program.script.Enqueue($"{main.Name}의 공격 ! {target.Name}에게 {main.AP * (2 * main.Focus + 1)}의 데미지");
+            }
+
+            main.Focus = 0;
+        }
+        else if (input == 2)
+        {
+            if (main.DefenseStance)
+            {
+                main.DefenseStance = false;
+                Program.script.Enqueue($"{main.Name}은 힘들어, 연속으로 방어 태세를 갖추지 못했다...");
+            }
+            else
+            {
+                main.DefenseStance = true;
+                Program.script.Enqueue($"{main.Name}은 방어 태세에 들어갔다.");
+            }
+            
+        }
+        else if (input == 3)
+        {
+            main.DefenseStance = false;
+            main.Focus += 1;
+            Program.script.Enqueue($"{main.Name}은 집중하고 있다...");
+        }
+    }
+
+    // 게임 종료 - 승리
+    public void GameWin()
+    {
+        Console.Clear();
+        Console.WriteLine("====================================");
+        Program.Talk($"축하합니다. {player.Name} 님");
+        Program.Talk("던전을 정복했습니다 !");
+
+        Program.ColorWriteLine("\n0. 게임 종료");
+
+        int input = GetInput(0, 0);
+
+        if (input == 0) Environment.Exit(0);
+    }
+
+    // 게임 종료 - 패배
+    public void GameFail()
+    {
+        Console.Clear();
+        Program.Talk($"{player.Name}은 쓰러졌습니다...");
+        Program.Talk($"다시 도전해보세요 !");
+
+        Program.ColorWriteLine("\n0. 게임 종료");
+
+        int input = GetInput(0, 0);
+
+        if (input == 0) Environment.Exit(0);
+    }
 }
 
 internal class Program
@@ -479,16 +877,25 @@ internal class Program
         Console.WriteLine();
     }
 
-    // 문자열의 배경색과 글자색을 변경시켜 출력하는 함수
-    public static void ColorWriteLine(string _str, ConsoleColor _writeColor = ConsoleColor.Yellow, ConsoleColor _backColor = ConsoleColor.Black)
+    // 문자열의 글자색을 변경시켜 출력하는 함수
+    public static void ColorWriteLine(string _str, ConsoleColor _writeColor = ConsoleColor.Yellow)
     {
-        Console.BackgroundColor = _backColor;
         Console.ForegroundColor = _writeColor;
         Console.WriteLine(_str);
         Console.ResetColor();
     }
 
+    // 커서의 위치를 옮기고 문자열을 출력하는 함수
+    public static void CursorWrite(int left, int top, string _str)
+    {
+        Console.SetCursorPosition(left, top);
+        Console.WriteLine(_str);
+    }
+
     public static Random random = new Random();
+
+    // 전투 메세지를 담고 있는 큐
+    public static Queue<string> script = new Queue<string>();
 
     static void Main()
     {
