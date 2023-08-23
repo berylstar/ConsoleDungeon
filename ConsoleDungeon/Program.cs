@@ -34,9 +34,9 @@ public class Player : ICharacter
     public List<Equip> OnEquip { get; private set; }        // 장착되어 있는 장비
 
     private int exp = 0;        // 레벨 업을 위한 경험치
-    
-    public bool DefenseStance { get; set; }
-    public int Focus { get; set; }
+
+    public bool DefenseStance { get; set; }     // 방어 태세
+    public int Focus { get; set; }              // 집중 카운트
 
     public Player(string _name, string _job, int _ap, int _dp, int _hp, int _speed)
     {
@@ -58,7 +58,7 @@ public class Player : ICharacter
         Focus = 0;
     }
 
-    // 장비 이름 반환, 없으면 ""
+    // 인벤토리의 장비 이름 반환, 없으면 ""
     public string OnEquipName(int idx)
     {
         if (OnEquip[idx] == null)
@@ -76,6 +76,7 @@ public class Player : ICharacter
     // 장비 판매
     public void SellEquip(Equip _equip)
     {
+        // 장착되어 있으면 효과 해제 이후 판매
         if (_equip.IsEquipped)
             EquipEffect(_equip);
 
@@ -87,7 +88,7 @@ public class Player : ICharacter
     {
         int pm = equip.IsEquipped ? -1 : 1;
 
-        if      (equip.Index == 1) { DP += 1 * pm; }
+        if (equip.Index == 1) { DP += 1 * pm; }
         else if (equip.Index == 2) { AP += 2 * pm; }
         else if (equip.Index == 3) { DP += 7 * pm; }
         else if (equip.Index == 4) { AP -= 2 * pm; DP += 15 * pm; }
@@ -127,15 +128,16 @@ public class Player : ICharacter
             HP += 10;
 
             Level += 1;
-
         }
     }
 
+    // 피해 입었을 때
     public void GetDamaged(int damage)
     {
         HP -= damage;
     }
 
+    // 방어 여부 판단
     public bool IsDefense()
     {
         if (Program.random.Next(0, 101) <= DP)
@@ -144,11 +146,6 @@ public class Player : ICharacter
             return true;
         else
             return false;
-    }
-
-    public void TEST()
-    {
-        AP += 100;
     }
 }
 
@@ -161,6 +158,7 @@ public enum EquipType
     Item = 3,
 }
 
+// 장비 클래스
 public class Equip
 {
     public string Name { get; private set; }
@@ -169,8 +167,8 @@ public class Equip
     public string Sub { get; private set; }
     public char State { get; private set; }
     public int Price { get; private set; }
-    public int Index { get; private set; }
-    public bool IsEquipped { get; private set; }    // 장착 = true / 해제 = false
+    public int Index { get; private set; }          // 효과 적용을 위한 장비 시리얼 넘버
+    public bool IsEquipped { get; private set; }    // 장착 확인 변수
 
     public Equip(string _name, EquipType _type, string _effect, string _sub, int _price, int _index)
     {
@@ -184,9 +182,10 @@ public class Equip
         IsEquipped = false;
     }
 
+    // 장비 장착 / 해제
     public void Switch(Player player)
     {
-        // 장착
+        // 장비 장착
         if (!IsEquipped)
         {
             // 이미 해당 타입의 장비가 장착되어 있을 때 해제 먼저
@@ -198,12 +197,13 @@ public class Equip
                 player.OnEquip[(int)Type] = null;
             }
 
+            // 해제 된 이후 현재 장비 장착
             player.OnEquip[(int)Type] = this;
             State = 'E';
             player.EquipEffect(this);
             IsEquipped = true;
         }
-        // 해제
+        // 장비 해제
         else
         {
             player.OnEquip[(int)Type] = null;
@@ -214,6 +214,7 @@ public class Equip
     }
 }
 
+// 상점 클래스 - 장비 사고 팔기
 public class Shop
 {
     public List<Equip> AllEquips { get; private set; }
@@ -225,6 +226,7 @@ public class Shop
     {
         player = _player;
 
+        // 전체 장비 초기화
         AllEquips = new List<Equip>()
         {
             new Equip("수련자의 도복", EquipType.Armor, "방어력 +7", "수련 집중에 효과적입니다.", 2500, 3),
@@ -257,10 +259,10 @@ public class Shop
         SetShop();
     }
 
-    // 무작위의 5개의 상품만 판매
-    private void SetShop()
+    // 상점에서는 무작위의 5개의 상품만 판매
+    public void SetShop()
     {
-        foreach(Equip equip in ShopList)
+        foreach (Equip equip in ShopList)
         {
             AllEquips.Add(equip);
         }
@@ -293,6 +295,7 @@ public class Shop
     }
 }
 
+// 열거형 몬스터 타입
 public enum MonsterType
 {
     Goblin = 0,
@@ -307,6 +310,7 @@ public enum MonsterType
     Guardian = 9,
 }
 
+// 몬스터 클래스
 public class Monster : ICharacter
 {
     public string Name { get; private set; }
@@ -320,6 +324,7 @@ public class Monster : ICharacter
     public bool DefenseStance { get; set; }
     public int Focus { get; set; }
 
+    // 무작위 몬스터 스탯 생성
     public Monster(string _name, int _level)
     {
         Name = _name;
@@ -371,6 +376,7 @@ public enum DungeonType
     Boss = 10,
 }
 
+// 던전 클래스 - 몬스터 생성, 난이도
 public class Dungeon
 {
     public DungeonType Type { get; private set; }
@@ -419,6 +425,7 @@ public class Dungeon
     }
 }
 
+// 게임 컨트롤러 클래스 - 전체 게임 관리
 public class GameController
 {
     private Player player;
@@ -445,7 +452,7 @@ public class GameController
         }
     }
 
-    // 처음 게임 시작
+    // 게임 시작 인트로 : 이름 & 직업 설정
     public void GameStart()
     {
         Program.Talk("당신의 이름을 알려주세요.\n");
@@ -473,8 +480,6 @@ public class GameController
     // 마을
     public void VillageEnterance()
     {
-        player.TEST();
-
         while (true)
         {
             Console.Clear();
@@ -576,7 +581,7 @@ public class GameController
         for (int i = 0; i < shop.ShopList.Count; i++)
         {
             Equip equip = shop.ShopList[i];
-            
+
             if (equip != null)
             {
                 Console.WriteLine(string.Format("({0}) {1}| {2}| {3}| {4}| {5} G",
@@ -680,12 +685,13 @@ public class GameController
         ShowShopForSell();
     }
 
-    // 던전 입장 - 전투 전
+    // 던전 입장 - 전투 전 던전 로비
     private void InDungeon()
     {
         while (dungeon.Count > 0)
         {
             Console.Clear();
+            Console.WriteLine("===============================");
             Program.Talk($"{dungeon.Type} 난이도의 던전입니다.");
             Program.Talk($"앞으로 {dungeon.Count}마리의 몬스터를 처치해야 합니다.\n");
 
@@ -700,14 +706,16 @@ public class GameController
             else ShowBattle();
         }
 
-        // 던전 난이도 증가
+        // 마지막 보스를 잡으면 게임 승리
         if (dungeon.Type == DungeonType.Boss)
         {
             GameWin();
         }
+        // 던전 난이도 증가, 상점 새로고침
         else
         {
             dungeon.GetStrong();
+            shop.SetShop();
         }
     }
 
@@ -786,7 +794,7 @@ public class GameController
         Program.script.Clear();
         dungeon.Monsters.RemoveAt(0);
         dungeon.Count -= 1;
-        
+
     }
 
     // 전투 중 ICharacter의 행동
@@ -824,7 +832,7 @@ public class GameController
                 main.DefenseStance = true;
                 Program.script.Enqueue($"{main.Name}은 방어 태세에 들어갔다.");
             }
-            
+
         }
         else if (input == 3)
         {
