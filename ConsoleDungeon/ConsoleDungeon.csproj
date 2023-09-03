@@ -43,15 +43,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Core\Dungeon.cs" />
+    <Compile Include="Core\GameController.cs" />
     <Compile Include="Core\Program.cs" />
+    <Compile Include="Core\Shop.cs" />
     <Compile Include="Core\Utils.cs" />
+    <Compile Include="Data\Equip.cs" />
+    <Compile Include="Data\ICharacter.cs" />
+    <Compile Include="Data\Monster.cs" />
+    <Compile Include="Data\Player.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Character\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
