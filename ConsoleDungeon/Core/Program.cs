@@ -121,8 +121,8 @@ public class Player : ICharacter
         {
             exp -= Level;
 
-            Program.Talk("\n ※ 레벨 업 ! ※");
-            Program.Talk($" ※공격력 + {(int)Math.Ceiling(Level / 3f)}, 체력 + 10 ※");
+            Utils.Talk("\n ※ 레벨 업 ! ※");
+            Utils.Talk($" ※공격력 + {(int)Math.Ceiling(Level / 3f)}, 체력 + 10 ※");
 
             AP += (int)Math.Ceiling(Level / 3f);
             HP += 10;
@@ -140,7 +140,7 @@ public class Player : ICharacter
     // 방어 여부 판단
     public bool IsDefense()
     {
-        if (Program.random.Next(0, 101) <= DP)
+        if (Utils.random.Next(0, 101) <= DP)
             return true;
         else if (DefenseStance)
             return true;
@@ -271,7 +271,7 @@ public class Shop
 
         for (int i = 0; i < 5; i++)
         {
-            int idx = Program.random.Next(0, AllEquips.Count);
+            int idx = Utils.random.Next(0, AllEquips.Count);
 
             ShopList.Add(AllEquips[idx]);
             AllEquips.RemoveAt(idx);
@@ -329,11 +329,11 @@ public class Monster : ICharacter
     {
         Name = _name;
         Level = _level;
-        AP = 5 + Program.random.Next(_level, _level * 3);
-        DP = Program.random.Next(_level, _level * 5);
-        HP = 50 + Program.random.Next(0, _level) * 10;
-        Speed = 5 + Program.random.Next(0, _level) * 5;
-        Gold = 300 + Program.random.Next(_level, _level * 2) * 100;
+        AP = 5 + Utils.random.Next(_level, _level * 3);
+        DP = Utils.random.Next(_level, _level * 5);
+        HP = 50 + Utils.random.Next(0, _level) * 10;
+        Speed = 5 + Utils.random.Next(0, _level) * 5;
+        Gold = 300 + Utils.random.Next(_level, _level * 2) * 100;
         DefenseStance = false;
         Focus = 0;
     }
@@ -358,7 +358,7 @@ public class Monster : ICharacter
 
     public bool IsDefense()
     {
-        if (Program.random.Next(0, 101) <= DP)
+        if (Utils.random.Next(0, 101) <= DP)
             return true;
         else if (DefenseStance)
             return true;
@@ -397,30 +397,30 @@ public class Dungeon
     {
         for (int i = 0; i < Count; i++)
         {
-            Monsters.Add(new Monster(((MonsterType)Program.random.Next(0, 10)).ToString(), i + 1));
+            Monsters.Add(new Monster(((MonsterType)Utils.random.Next(0, 10)).ToString(), i + 1));
         }
     }
 
     // 던전 난이도 상승 함수
     public void GetStrong()
     {
-        if (Type == DungeonType.Easy)
+        switch (Type)
         {
-            Type = DungeonType.Normal;
-            Count = (int)DungeonType.Normal;
-            SetMonsters();
-        }
-        else if (Type == DungeonType.Normal)
-        {
-            Type = DungeonType.Hard;
-            Count = (int)DungeonType.Hard;
-            SetMonsters();
-        }
-        else if (Type == DungeonType.Hard)
-        {
-            Type = DungeonType.Boss;
-            Count = 1;
-            Monsters.Add(new Monster("Dragon", 10, 40, 40, 200, 40, 10000));
+            case DungeonType.Easy:
+                Type = DungeonType.Normal;
+                Count = (int)DungeonType.Normal;
+                SetMonsters();
+                break;
+            case DungeonType.Normal:
+                Type = DungeonType.Hard;
+                Count = (int)DungeonType.Hard;
+                SetMonsters();
+                break;
+            case DungeonType.Hard:
+                Type = DungeonType.Boss;
+                Count = 1;
+                Monsters.Add(new Monster("Dragon", 10, 40, 40, 200, 40, 10000));
+                break;
         }
     }
 }
@@ -455,14 +455,14 @@ public class GameController
     // 게임 시작 인트로 : 이름 & 직업 설정
     public void GameStart()
     {
-        Program.Talk("당신의 이름을 알려주세요.\n");
+        Utils.Talk("당신의 이름을 알려주세요.\n");
         Console.Write(">> ");
         string warriorName = Console.ReadLine();
 
-        Program.Talk("\n당신의 직업을 골라주세요.\n");
-        Program.ColorWriteLine("1. 검사 : 밸런스형");
-        Program.ColorWriteLine("2. 전사 : 방어형");
-        Program.ColorWriteLine("3. 도적 : 스피드형");
+        Utils.Talk("\n당신의 직업을 골라주세요.\n");
+        Utils.ColorWriteLine("1. 검사 : 밸런스형");
+        Utils.ColorWriteLine("2. 전사 : 방어형");
+        Utils.ColorWriteLine("3. 도적 : 스피드형");
 
         int jobChoice = GetInput(1, 3);
 
@@ -484,15 +484,15 @@ public class GameController
         {
             Console.Clear();
             Console.WriteLine("====================================");
-            Program.Talk($"스파르타 마을에 어서오세요. {player.Name} 님");
-            Program.Talk("이곳에서 콘솔 던전으로 들어가기 전 활동을 할 수 있습니다.\n");
+            Utils.Talk($"스파르타 마을에 어서오세요. {player.Name} 님");
+            Utils.Talk("이곳에서 콘솔 던전으로 들어가기 전 활동을 할 수 있습니다.\n");
 
-            Program.ColorWriteLine("1. 상태 보기");
-            Program.ColorWriteLine("2. 인벤토리");
-            Program.ColorWriteLine("3. 상점 - 구매");
-            Program.ColorWriteLine("4. 상점 - 판매");
-            Program.ColorWriteLine($"\n5. 던전 입장 - {dungeon.Type}", ConsoleColor.Red);
-            Program.ColorWriteLine("\n0. 게임 종료");
+            Utils.ColorWriteLine("1. 상태 보기");
+            Utils.ColorWriteLine("2. 인벤토리");
+            Utils.ColorWriteLine("3. 상점 - 구매");
+            Utils.ColorWriteLine("4. 상점 - 판매");
+            Utils.ColorWriteLine($"\n5. 던전 입장 - {dungeon.Type}", ConsoleColor.Red);
+            Utils.ColorWriteLine("\n0. 게임 종료");
 
             int input = GetInput(0, 5);
 
@@ -525,7 +525,7 @@ public class GameController
         Console.WriteLine($"|    | |    ← 아이템 : {player.OnEquipName(3)}");
         Console.WriteLine($"◇----------◇----------◇----------");
 
-        Program.ColorWriteLine("\n0. 나가기");
+        Utils.ColorWriteLine("\n0. 나가기");
 
         _ = GetInput(0, 0);
     }
@@ -556,8 +556,8 @@ public class GameController
             }
         }
 
-        Program.ColorWriteLine("\n1 ~ 9. 해당 장비 장착/해제");
-        Program.ColorWriteLine("0. 나가기");
+        Utils.ColorWriteLine("\n1 ~ 9. 해당 장비 장착/해제");
+        Utils.ColorWriteLine("0. 나가기");
 
         int input = GetInput(0, player.Inventory.Count);
 
@@ -572,7 +572,7 @@ public class GameController
     private void ShowShopForBuy()
     {
         Console.Clear();
-        Program.Talk("필요한 장비를 얻을 수 있는 상점입니다.\n");
+        Utils.Talk("필요한 장비를 얻을 수 있는 상점입니다.\n");
         Console.WriteLine("[보유 골드]");
         Console.WriteLine($"{player.Gold} G\n");
 
@@ -598,8 +598,8 @@ public class GameController
             }
         }
 
-        Program.ColorWriteLine("\n1 ~ 5. 해당 장비 구매");
-        Program.ColorWriteLine("0. 나가기");
+        Utils.ColorWriteLine("\n1 ~ 5. 해당 장비 구매");
+        Utils.ColorWriteLine("0. 나가기");
 
         int input = GetInput(0, 5);
 
@@ -640,8 +640,8 @@ public class GameController
     private void ShowShopForSell()
     {
         Console.Clear();
-        Program.Talk("필요없는 장비를 팔아보세요.");
-        Program.Talk("원래 가격의 50%를 돌려드립니다.\n");
+        Utils.Talk("필요없는 장비를 팔아보세요.");
+        Utils.Talk("원래 가격의 50%를 돌려드립니다.\n");
         Console.WriteLine("[보유 골드]");
         Console.WriteLine($"{player.Gold} G\n");
 
@@ -666,8 +666,8 @@ public class GameController
             }
         }
 
-        Program.ColorWriteLine("\n1 ~ 9. 해당 장비 판매");
-        Program.ColorWriteLine("0. 나가기");
+        Utils.ColorWriteLine("\n1 ~ 9. 해당 장비 판매");
+        Utils.ColorWriteLine("0. 나가기");
 
         int input = GetInput(0, 9);
 
@@ -692,12 +692,12 @@ public class GameController
         {
             Console.Clear();
             Console.WriteLine("===============================");
-            Program.Talk($"{dungeon.Type} 난이도의 던전입니다.");
-            Program.Talk($"앞으로 {dungeon.Count}마리의 몬스터를 처치해야 합니다.\n");
+            Utils.Talk($"{dungeon.Type} 난이도의 던전입니다.");
+            Utils.Talk($"앞으로 {dungeon.Count}마리의 몬스터를 처치해야 합니다.\n");
 
-            Program.ColorWriteLine("1. 상태 보기");
-            Program.ColorWriteLine("2. 인벤토리");
-            Program.ColorWriteLine("\n3. 이어서 진행하기", ConsoleColor.Red);
+            Utils.ColorWriteLine("1. 상태 보기");
+            Utils.ColorWriteLine("2. 인벤토리");
+            Utils.ColorWriteLine("\n3. 이어서 진행하기", ConsoleColor.Red);
 
             int input = GetInput(1, 3);
 
@@ -728,15 +728,15 @@ public class GameController
         while (mon.HP > 0)
         {
             Console.Clear();
-            Program.CursorWrite(35, 0, $"◇----------◇----------◇----------");
-            Program.CursorWrite(35, 1, $"| LV. {mon.Level:D2} \t {mon.Name}");
-            Program.CursorWrite(35, 2, "|");
-            Program.CursorWrite(35, 3, $"| 체  력 : {mon.HP}");
-            Program.CursorWrite(35, 4, $"| 공격력 : {mon.AP}");
-            Program.CursorWrite(35, 5, $"| 방어력 : {mon.DP}");
-            Program.CursorWrite(35, 6, $"| 스피드 : {mon.Speed}");
-            Program.CursorWrite(35, 7, $"| 집  중 : {mon.Focus}");
-            Program.CursorWrite(35, 8, $"◇----------◇----------◇----------");
+            Utils.CursorWrite(35, 0, $"◇----------◇----------◇----------");
+            Utils.CursorWrite(35, 1, $"| LV. {mon.Level:D2} \t {mon.Name}");
+            Utils.CursorWrite(35, 2, "|");
+            Utils.CursorWrite(35, 3, $"| 체  력 : {mon.HP}");
+            Utils.CursorWrite(35, 4, $"| 공격력 : {mon.AP}");
+            Utils.CursorWrite(35, 5, $"| 방어력 : {mon.DP}");
+            Utils.CursorWrite(35, 6, $"| 스피드 : {mon.Speed}");
+            Utils.CursorWrite(35, 7, $"| 집  중 : {mon.Focus}");
+            Utils.CursorWrite(35, 8, $"◇----------◇----------◇----------");
 
             Console.WriteLine($"◇----------◇----------◇----------");
             Console.WriteLine($"| LV. {player.Level:D2} \t {player.Name}");
@@ -751,18 +751,18 @@ public class GameController
 
             while (Program.script.Count > 0)
             {
-                Program.Talk(Program.script.Dequeue());
+                Utils.Talk(Program.script.Dequeue());
             }
 
-            Program.ColorWriteLine("\n1. 공격");
-            Program.ColorWriteLine("2. 방어");
-            Program.ColorWriteLine("3. 집중");
+            Utils.ColorWriteLine("\n1. 공격");
+            Utils.ColorWriteLine("2. 방어");
+            Utils.ColorWriteLine("3. 집중");
 
             int input = GetInput(1, 3);
 
             if (mon.Speed > player.Speed)
             {
-                CharacterAction(Program.random.Next(0, 6) % 3 + 1, mon, player);
+                CharacterAction(Utils.random.Next(0, 6) % 3 + 1, mon, player);
                 Console.WriteLine();
                 CharacterAction(input, player, mon);
             }
@@ -770,7 +770,7 @@ public class GameController
             {
                 CharacterAction(input, player, mon);
                 Console.WriteLine();
-                CharacterAction(Program.random.Next(0, 6) % 3 + 1, mon, player);
+                CharacterAction(Utils.random.Next(0, 6) % 3 + 1, mon, player);
             }
 
             if (player.HP < 0)
@@ -779,15 +779,15 @@ public class GameController
             }
         }
 
-        Program.Talk($"{mon.Name}은 쓰러졌습니다.");
+        Utils.Talk($"{mon.Name}은 쓰러졌습니다.");
 
-        Program.Talk($"{mon.Gold} G 획득 !");
+        Utils.Talk($"{mon.Gold} G 획득 !");
         player.Gold += mon.Gold;
 
-        Program.Talk($"{mon.Level}의 경험치 획득 !");
+        Utils.Talk($"{mon.Level}의 경험치 획득 !");
         player.GetExperience(mon.Level);
 
-        Program.ColorWriteLine("\n0. 돌아가기");
+        Utils.ColorWriteLine("\n0. 돌아가기");
 
         _ = GetInput(0, 0);
 
@@ -847,10 +847,10 @@ public class GameController
     {
         Console.Clear();
         Console.WriteLine("====================================");
-        Program.Talk($"축하합니다. {player.Name} 님");
-        Program.Talk("던전을 정복했습니다 !");
+        Utils.Talk($"축하합니다. {player.Name} 님");
+        Utils.Talk("던전을 정복했습니다 !");
 
-        Program.ColorWriteLine("\n0. 게임 종료");
+        Utils.ColorWriteLine("\n0. 게임 종료");
 
         int input = GetInput(0, 0);
 
@@ -861,10 +861,10 @@ public class GameController
     public void GameFail()
     {
         Console.Clear();
-        Program.Talk($"{player.Name}은 쓰러졌습니다...");
-        Program.Talk($"다시 도전해보세요 !");
+        Utils.Talk($"{player.Name}은 쓰러졌습니다...");
+        Utils.Talk($"다시 도전해보세요 !");
 
-        Program.ColorWriteLine("\n0. 게임 종료");
+        Utils.ColorWriteLine("\n0. 게임 종료");
 
         int input = GetInput(0, 0);
 
@@ -874,34 +874,6 @@ public class GameController
 
 internal class Program
 {
-    // 문자열을 한 글자씩 출력하는 함수
-    public static void Talk(string _str)
-    {
-        for (int i = 0; i < _str.Length; i++)
-        {
-            Console.Write(_str[i]);
-            Thread.Sleep(1); // 25
-        }
-        Console.WriteLine();
-    }
-
-    // 문자열의 글자색을 변경시켜 출력하는 함수
-    public static void ColorWriteLine(string _str, ConsoleColor _writeColor = ConsoleColor.Yellow)
-    {
-        Console.ForegroundColor = _writeColor;
-        Console.WriteLine(_str);
-        Console.ResetColor();
-    }
-
-    // 커서의 위치를 옮기고 문자열을 출력하는 함수
-    public static void CursorWrite(int left, int top, string _str)
-    {
-        Console.SetCursorPosition(left, top);
-        Console.WriteLine(_str);
-    }
-
-    public static Random random = new Random();
-
     // 전투 메세지를 담고 있는 큐
     public static Queue<string> script = new Queue<string>();
 
