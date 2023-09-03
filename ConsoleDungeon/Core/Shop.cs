@@ -7,14 +7,25 @@ using System.Threading.Tasks;
 // 상점 클래스 - 장비 사고 팔기
 public class Shop
 {
+    private static Shop i;
+
+    public static Shop I
+    {
+        get
+        {
+            if (i == null)
+                new Shop();
+
+            return i;
+        }
+    }
+
     public List<Equip> AllEquips { get; private set; }
     public List<Equip> ShopList { get; private set; }
 
-    private readonly Player player;
-
-    public Shop(Player _player)
+    public Shop()
     {
-        player = _player;
+        i = this;
 
         // 전체 장비 초기화
         AllEquips = new List<Equip>()
@@ -69,18 +80,18 @@ public class Shop
     }
 
     // 상점에서 장비 구입
-    public void Buy(int index)
+    public void Buy(Player _player, int index)
     {
-        player.Gold -= ShopList[index].Price;
-        player.GetEquip(ShopList[index]);
+        _player.Gold -= ShopList[index].Price;
+        _player.GetEquip(ShopList[index]);
         ShopList[index] = null;
     }
 
     // 상점에서 장비 판매
-    public void Sell(int index)
+    public void Sell(Player _player, int index)
     {
-        Equip equip = player.Inventory[index];
-        player.SellEquip(equip);
-        player.Gold += equip.Price / 2;
+        Equip equip = _player.Inventory[index];
+        _player.SellEquip(equip);
+        _player.Gold += equip.Price / 2;
     }
 }

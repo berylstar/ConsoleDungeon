@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-// 열거형 던전 타입 / Easy : 3, Normal : 4, Hard : 6, Boss
+// 열거형 던전 타입 / Easy=3, Normal=4, Hard=6, Boss
 public enum DungeonType
 {
     Easy = 3,
@@ -17,12 +17,27 @@ public enum DungeonType
 // 던전 클래스 - 몬스터 생성, 난이도
 public class Dungeon
 {
+    private static Dungeon i;
+
+    public static Dungeon I
+    {
+        get
+        {
+            if (i == null)
+                new Dungeon();
+
+            return i;
+        }
+    }
+
     public DungeonType Type { get; private set; }
     public int Count { get; set; }
     public List<Monster> Monsters { get; private set; }
 
     public Dungeon()
     {
+        i = this;
+
         Type = DungeonType.Easy;
         Count = (int)DungeonType.Easy;
 

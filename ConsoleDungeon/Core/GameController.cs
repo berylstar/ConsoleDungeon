@@ -8,31 +8,10 @@ using System.Threading.Tasks;
 public class GameController
 {
     private Player player;
-    private Shop shop;
-    private Dungeon dungeon;
     private Monster mon;
 
     // 전투 메세지를 담고 있는 큐
     private static Queue<string> script = new Queue<string>();
-
-    // 입력 받는 함수 : min <= input <= max 값만 받도록
-    private int GetInput(int min, int max)
-    {
-        Console.WriteLine("\n원하시는 행동을 입력해주세요.");
-        Console.Write(">> ");
-
-        while (true)
-        {
-            if (int.TryParse(Console.ReadLine(), out int input))
-            {
-                if (min <= input && input <= max)
-                    return input;
-            }
-
-            Console.WriteLine("\n잘못된 입력입니다. 다시 입력해주세요.");
-            Console.Write(">> ");
-        }
-    }
 
     // 게임 시작 인트로 : 이름 & 직업 설정
     public void GameStart()
@@ -46,7 +25,7 @@ public class GameController
         Utils.ColorWriteLine("2. 전사 : 방어형");
         Utils.ColorWriteLine("3. 도적 : 스피드형");
 
-        int jobChoice = GetInput(1, 3);
+        int jobChoice = Utils.GetInput(1, 3);
 
         Player _player;
         if (jobChoice == 1) { _player = new Player(warriorName, "검사", 10, 5, 100, 20); }
@@ -54,9 +33,6 @@ public class GameController
         else { _player = new Player(warriorName, "도적", 12, 0, 80, 30); }
 
         player = _player;
-        shop = new Shop(player);
-
-        dungeon = new Dungeon();
     }
 
     // 마을
@@ -73,10 +49,10 @@ public class GameController
             Utils.ColorWriteLine("2. 인벤토리");
             Utils.ColorWriteLine("3. 상점 - 구매");
             Utils.ColorWriteLine("4. 상점 - 판매");
-            Utils.ColorWriteLine($"\n5. 던전 입장 - {dungeon.Type}", ConsoleColor.Red);
+            Utils.ColorWriteLine($"\n5. 던전 입장 - {Dungeon.I.Type}", ConsoleColor.Red);
             Utils.ColorWriteLine("\n0. 게임 종료");
 
-            int input = GetInput(0, 5);
+            int input = Utils.GetInput(0, 5);
 
             if (input == 1) ShowStatus();
             else if (input == 2) ShowInventory();
@@ -109,7 +85,7 @@ public class GameController
 
         Utils.ColorWriteLine("\n0. 나가기");
 
-        _ = GetInput(0, 0);
+        _ = Utils.GetInput(0, 0);
     }
 
     // 인벤토리 - 장비 장착 / 해제 
@@ -141,7 +117,7 @@ public class GameController
         Utils.ColorWriteLine("\n1 ~ 9. 해당 장비 장착/해제");
         Utils.ColorWriteLine("0. 나가기");
 
-        int input = GetInput(0, player.Inventory.Count);
+        int input = Utils.GetInput(0, player.Inventory.Count);
 
         if (0 < input && input <= player.Inventory.Count)
         {
@@ -160,9 +136,9 @@ public class GameController
 
         Console.WriteLine("[장비 목록]");
 
-        for (int i = 0; i < shop.ShopList.Count; i++)
+        for (int i = 0; i < Shop.I.ShopList.Count; i++)
         {
-            Equip equip = shop.ShopList[i];
+            Equip equip = Shop.I.ShopList[i];
 
             if (equip != null)
             {
@@ -183,28 +159,28 @@ public class GameController
         Utils.ColorWriteLine("\n1 ~ 5. 해당 장비 구매");
         Utils.ColorWriteLine("0. 나가기");
 
-        int input = GetInput(0, 5);
+        int input = Utils.GetInput(0, 5);
 
         // 예외 처리
         while (input != 0)
         {
             // 이미 판매된 장비였을 때
-            if (shop.ShopList[input - 1] == null)
+            if (Shop.I.ShopList[input - 1] == null)
             {
                 Console.Write("\n이미 판매된 장비입니다. 다시 입력해주세요.");
-                input = GetInput(0, 5);
+                input = Utils.GetInput(0, 5);
             }
             // 돈이 부족할 때
-            else if (player.Gold < shop.ShopList[input - 1].Price)
+            else if (player.Gold < Shop.I.ShopList[input - 1].Price)
             {
                 Console.Write("\n골드가 부족합니다. 다른 장비를 구매하세요.");
-                input = GetInput(0, 5);
+                input = Utils.GetInput(0, 5);
             }
             // 인벤토리가 가득 찼을 때
             else if (player.Inventory.Count >= 9)
             {
                 Console.Write("\n인벤토리가 가득 찼습니다. 구매하시려면 먼저 장비를 판매해주세요.");
-                input = GetInput(0, 5);
+                input = Utils.GetInput(0, 5);
             }
             else
                 break;
@@ -213,7 +189,7 @@ public class GameController
         // 그 외 상점에서 구매가 가능한 경우
         if (1 <= input && input <= 5)
         {
-            shop.Buy(input - 1);
+            Shop.I.Buy(player, input - 1);
             ShowShopForBuy();
         }
     }
@@ -251,7 +227,7 @@ public class GameController
         Utils.ColorWriteLine("\n1 ~ 9. 해당 장비 판매");
         Utils.ColorWriteLine("0. 나가기");
 
-        int input = GetInput(0, 9);
+        int input = Utils.GetInput(0, 9);
 
         if (input == 0)
             return;
@@ -260,28 +236,28 @@ public class GameController
         while (input > player.Inventory.Count)
         {
             Console.Write("\n해당 인벤토리는 비어 있습니다. 다시 선택해주세요.");
-            input = GetInput(0, 9);
+            input = Utils.GetInput(0, 9);
         }
 
-        shop.Sell(input - 1);
+        Shop.I.Sell(player, input - 1);
         ShowShopForSell();
     }
 
     // 던전 입장 - 전투 전 던전 로비
     private void InDungeon()
     {
-        while (dungeon.Count > 0)
+        while (Dungeon.I.Count > 0)
         {
             Console.Clear();
             Console.WriteLine("===============================");
-            Utils.Talk($"{dungeon.Type} 난이도의 던전입니다.");
-            Utils.Talk($"앞으로 {dungeon.Count}마리의 몬스터를 처치해야 합니다.\n");
+            Utils.Talk($"{Dungeon.I.Type} 난이도의 던전입니다.");
+            Utils.Talk($"앞으로 {Dungeon.I.Count}마리의 몬스터를 처치해야 합니다.\n");
 
             Utils.ColorWriteLine("1. 상태 보기");
             Utils.ColorWriteLine("2. 인벤토리");
             Utils.ColorWriteLine("\n3. 이어서 진행하기", ConsoleColor.Red);
 
-            int input = GetInput(1, 3);
+            int input = Utils.GetInput(1, 3);
 
             if (input == 1) ShowStatus();
             else if (input == 2) ShowInventory();
@@ -289,22 +265,22 @@ public class GameController
         }
 
         // 마지막 보스를 잡으면 게임 승리
-        if (dungeon.Type == DungeonType.Boss)
+        if (Dungeon.I.Type == DungeonType.Boss)
         {
             GameWin();
         }
         // 던전 난이도 증가, 상점 새로고침
         else
         {
-            dungeon.GetStrong();
-            shop.SetShop();
+            Dungeon.I.GetStrong();
+            Shop.I.SetShop();
         }
     }
 
     // 몬스터와 전투
     private void ShowBattle()
     {
-        mon = dungeon.Monsters[0];
+        mon = Dungeon.I.Monsters[0];
         script.Enqueue($"{mon.Name}이 나타났습니다 !");
 
         while (mon.HP > 0)
@@ -340,7 +316,7 @@ public class GameController
             Utils.ColorWriteLine("2. 방어");
             Utils.ColorWriteLine("3. 집중");
 
-            int input = GetInput(1, 3);
+            int input = Utils.GetInput(1, 3);
 
             if (mon.Speed > player.Speed)
             {
@@ -371,11 +347,11 @@ public class GameController
 
         Utils.ColorWriteLine("\n0. 돌아가기");
 
-        _ = GetInput(0, 0);
+        _ = Utils.GetInput(0, 0);
 
         script.Clear();
-        dungeon.Monsters.RemoveAt(0);
-        dungeon.Count -= 1;
+        Dungeon.I.Monsters.RemoveAt(0);
+        Dungeon.I.Count -= 1;
 
     }
 
@@ -434,7 +410,7 @@ public class GameController
 
         Utils.ColorWriteLine("\n0. 게임 종료");
 
-        int input = GetInput(0, 0);
+        int input = Utils.GetInput(0, 0);
 
         if (input == 0) Environment.Exit(0);
     }
@@ -448,7 +424,7 @@ public class GameController
 
         Utils.ColorWriteLine("\n0. 게임 종료");
 
-        int input = GetInput(0, 0);
+        int input = Utils.GetInput(0, 0);
 
         if (input == 0) Environment.Exit(0);
     }

@@ -6,6 +6,25 @@ using System.Threading;
 
 public class Utils
 {
+    // 입력 받는 함수 : min <= input <= max 값만 받도록
+    public static int GetInput(int min, int max)
+    {
+        Console.WriteLine("\n원하시는 행동을 입력해주세요.");
+        Console.Write(">> ");
+
+        while (true)
+        {
+            if (int.TryParse(Console.ReadLine(), out int input))
+            {
+                if (min <= input && input <= max)
+                    return input;
+            }
+
+            Console.WriteLine("\n잘못된 입력입니다. 다시 입력해주세요.");
+            Console.Write(">> ");
+        }
+    }
+
     // 문자열을 한 글자씩 출력하는 함수
     public static void Talk(string _str)
     {
